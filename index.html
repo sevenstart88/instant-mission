@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>인생은 선착순</title>
+<style>
+  :root{
+    --bg:#0F1115;
+    --card:#1A1D24;
+    --card-2:#20242D;
+    --accent:#FFB020;
+    --accent-2:#FF6B4A;
+    --text:#F5F5F0;
+    --text-dim:#9A9DA6;
+    --line:#2A2E38;
+    --danger:#FF5A5A;
+    --success:#3DDC97;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    padding-bottom:90px;
+  }
+  header{
+    padding:20px 20px 16px;
+    position:sticky; top:0;
+    background:var(--bg);
+    z-index:10;
+    border-bottom:1px solid var(--line);
+  }
+  .logo{font-size:20px; font-weight:800; letter-spacing:-0.5px;}
+  .logo span{color:var(--accent);}
+  .subtitle{font-size:12px; color:var(--text-dim); margin-top:2px;}
+
+  .screen{display:none; padding:16px;}
+  .screen.active{display:block;}
+
+  .auth-wrap{padding:50px 24px 24px;}
+  .auth-title{font-size:26px; font-weight:800; line-height:1.3; margin-bottom:8px;}
+  .auth-sub{font-size:14px; color:var(--text-dim); margin-bottom:28px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+  input, select{
+    width:100%; padding:14px 16px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--text);
+    font-size:15px;
+    outline:none;
+  }
+  input:focus, select:focus{border-color:var(--accent);}
+  .btn{width:100%; padding:15px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer;}
+  .btn-primary{background:var(--accent); color:#1A1200;}
+  .btn-outline{background:transparent; border:1px solid var(--line); color:var(--text);}
+  .btn-sm{padding:8px 14px; font-size:13px; border-radius:8px;}
+  .link-row{display:flex; justify-content:center; gap:14px; margin-top:16px; font-size:12.5px; color:var(--text-dim);}
+  .link-row b{color:var(--accent); cursor:pointer; font-weight:600;}
+  .link-switch{text-align:center; margin-top:18px; font-size:13px; color:var(--text-dim);}
+  .link-switch b{color:var(--accent); cursor:pointer;}
+  .err{color:var(--danger); font-size:13px; margin-top:10px; display:none;}
+  .ok-msg{color:var(--success); font-size:13px; margin-top:10px; display:none; line-height:1.5;}
+
+  .points-card{
+    background:linear-gradient(135deg, var(--card-2), var(--card));
+    border:1px solid var(--line); border-radius:18px; padding:22px; margin-bottom:16px;
+  }
+  .points-row{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px;}
+  .points-label{font-size:12px; color:var(--text-dim); margin-bottom:6px;}
+  .points-amount{font-size:26px; font-weight:800;}
+  .points-amount.sub{font-size:20px;}
+  .points-amount span{font-size:14px; font-weight:500; color:var(--text-dim);}
+  .divider-v{width:1px; background:var(--line); align-self:stretch; margin:0 16px;}
+  .progress-bar{height:8px; background:var(--line); border-radius:4px; margin:6px 0 6px; overflow:hidden;}
+  .progress-fill{height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:4px; transition:width .4s;}
+  .progress-text{font-size:12px; color:var(--text-dim);}
+  .withdraw-btn{margin-top:14px;}
+
+  .participate-banner{
+    display:flex; align-items:center; gap:12px;
+    background:rgba(255,176,32,0.12); border:1px solid rgba(255,176,32,0.35);
+    border-radius:14px; padding:14px 16px; margin-bottom:18px; cursor:pointer;
+  }
+  .participate-banner .pb-icon{font-size:24px;}
+  .participate-banner .pb-title{font-weight:700; font-size:14px;}
+  .participate-banner .pb-desc{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
+  .participate-banner .pb-arrow{margin-left:auto; color:var(--accent); font-size:18px;}
+
+  .sec-title{font-size:15px; font-weight:700; margin:22px 0 12px; display:flex; align-items:center; gap:6px;}
+  .sec-badge{background:var(--accent-2); color:#fff; font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px;}
+
+  .request-card{
+    background:rgba(255,107,74,0.12); border:1px solid rgba(255,107,74,0.4);
+    border-radius:14px; padding:14px 16px; margin-bottom:10px;
+  }
+  .request-card .rq-title{font-weight:700; font-size:14px; margin-bottom:4px;}
+  .request-card .rq-desc{font-size:12.5px; color:var(--text-dim); line-height:1.5;}
+
+  .mission-item{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:12px; margin-bottom:10px;
+  }
+  .mission-thumb{width:52px; height:52px; border-radius:10px; background:var(--card-2); object-fit:cover; flex-shrink:0;}
+  .mission-info{flex:1; min-width:0;}
+  .mission-name{font-size:14px; font-weight:700; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mission-period{font-size:11px; color:var(--text-dim); margin-bottom:3px;}
+  .mission-count{font-size:11.5px; color:var(--accent); font-weight:700;}
+  .mission-count.full{color:var(--text-dim);}
+  .apply-btn{
+    flex-shrink:0; padding:9px 14px; border-radius:10px; border:none;
+    font-size:12.5px; font-weight:700; cursor:pointer; background:var(--accent); color:#1A1200;
+  }
+  .apply-btn:disabled{background:var(--card-2); color:var(--text-dim); cursor:default;}
+
+  .empty{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:13px;}
+
+  .history-item{display:flex; justify-content:space-between; align-items:center; padding:12px 4px; border-bottom:1px solid var(--line);}
+  .history-item .h-left .h-title{font-size:13.5px; font-weight:600;}
+  .history-item .h-left .h-date{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
+  .history-item .h-amount{font-size:14px; font-weight:700; color:var(--success);}
+
+  .bottom-nav{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    max-width:480px; width:100%; background:var(--card); border-top:1px solid var(--line);
+    display:flex; padding:8px 0 max(8px, env(safe-area-inset-bottom)); z-index:20;
+  }
+  .nav-item{flex:1; text-align:center; padding:8px 0; cursor:pointer; color:var(--text-dim); font-size:11px; font-weight:600;}
+  .nav-item .nav-icon{font-size:20px; display:block; margin-bottom:3px;}
+  .nav-item.active{color:var(--accent);}
+
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:flex-end; justify-content:center;}
+  .modal-overlay.active{display:flex;}
+  .modal-box{background:var(--card); width:100%; max-width:480px; border-radius:20px 20px 0 0; padding:24px 20px 30px; max-height:88vh; overflow-y:auto;}
+  .modal-title{font-size:17px; font-weight:800; margin-bottom:4px;}
+  .modal-sub{font-size:12.5px; color:var(--text-dim); margin-bottom:20px;}
+  .modal-close{float:right; font-size:20px; color:var(--text-dim); cursor:pointer;}
+  .notice-box{
+    background:rgba(255,176,32,0.1); border:1px solid rgba(255,176,32,0.3);
+    border-radius:10px; padding:12px 14px; font-size:12px; color:var(--accent); line-height:1.6; margin-bottom:18px;
+  }
+  .file-input-label{display:block; padding:14px; text-align:center; background:var(--card-2); border:1px dashed var(--line); border-radius:12px; font-size:13px; color:var(--text-dim); cursor:pointer;}
+  .toast{
+    position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+    background:#fff; color:#111; padding:12px 20px; border-radius:30px; font-size:13px; font-weight:600;
+    z-index:200; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .kakao-box{
+    background:var(--card-2); border:1px solid var(--line); border-radius:14px;
+    padding:18px; text-align:center; margin:16px 0;
+  }
+  .kakao-id-text{font-size:20px; font-weight:800; color:var(--accent); margin:8px 0;}
+  .copy-btn{display:inline-block; padding:8px 16px; background:var(--card); border:1px solid var(--line); border-radius:20px; font-size:12px; color:var(--text); cursor:pointer;}
+
+  .tutorial-box{font-size:13.5px; line-height:1.9; color:var(--text);}
+  .tutorial-box h3{font-size:15px; color:var(--accent); margin:20px 0 8px;}
+  .tutorial-box h3:first-child{margin-top:0;}
+  .tutorial-box p{color:var(--text-dim); margin-bottom:4px;}
+  .tutorial-greeting{font-size:16px; font-weight:700; margin-bottom:6px;}
+  .tutorial-greeting + p{color:var(--text-dim); margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN SCREEN -->
+<div class="screen active" id="screen-login">
+  <div class="auth-wrap">
+    <div class="auth-title">인생은<br><span style="color:var(--accent)">선착순</span> 🏃</div>
+    <div class="auth-sub">광고 미션 1건당 1,000원, 선착순으로 참여하세요</div>
+    <div class="field">
+      <label>아이디</label>
+      <input type="text" id="login-id" placeholder="아이디를 입력해주세요" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input type="password" id="login-pw" placeholder="비밀번호">
+    </div>
+    <div class="err" id="login-err"></div>
+    <button class="btn btn-primary" onclick="doLogin()" style="margin-top:6px;">로그인</button>
+    <div class="link-row">
+      <b onclick="openFindIdModal()">아이디 찾기</b>
+      <span>|</span>
+      <b onclick="openFindPwModal()">비밀번호 찾기</b>
+    </div>
+    <div class="link-switch">아직 회원이 아니신가요? <b onclick="showScreen('signup')">회원가입</b></div>
+  </div>
+</div>
+
+<!-- SIGNUP SCREEN -->
+<div class="screen" id="screen-signup">
+  <div class="auth-wrap" style="padding-top:40px;">
+    <div class="auth-title" style="font-size:22px;">회원가입</div>
+    <div class="auth-sub">기본 정보 4가지만 입력해주세요</div>
+    <div class="field">
+      <label>이름</label>
+      <input type="text" id="signup-name" placeholder="홍길동">
+    </div>
+    <div class="field">
+      <label>휴대폰 번호</label>
+      <input type="tel" id="signup-phone" placeholder="010-0000-0000">
+    </div>
+    <div class="field">
+      <label>아이디</label>
+      <input type="text" id="signup-id" placeholder="영문/숫자로 입력해주세요" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input type="password" id="signup-pw" placeholder="6자 이상">
+    </div>
+    <div class="err" id="signup-err"></div>
+    <button class="btn btn-primary" onclick="doSignup()" style="margin-top:6px;">가입하고 시작하기</button>
+    <div class="link-switch">이미 계정이 있으신가요? <b onclick="showScreen('login')">로그인</b></div>
+  </div>
+</div>
+
+<!-- TUTORIAL SCREEN (shown after signup) -->
+<div class="screen" id="screen-tutorial">
+  <div class="auth-wrap" style="padding-top:36px;">
+    <div class="tutorial-box">
+      <div class="tutorial-greeting">안녕하세요! 회원님 👋</div>
+      <p>[인생은 선착순] 개발자입니다~<br>사용하는 법을 간단히 안내드립니다.</p>
+
+      <h3>▶ 참여 신청</h3>
+      <p>① 회원가입 하고, 로그인 하신 후</p>
+      <p>② 메인화면에서 "참여하기" 버튼을 누르시면 카카오톡 ID가 보일 거예요. 그 카톡으로 대화를 걸어주세요.<br>카톡으로 <b style="color:var(--text)">"인생은 선착순"</b>이라고 6글자 남겨주세요!</p>
+
+      <h3>▶ 진행 방식</h3>
+      <p>③ 메인화면에 "선착순 리스트"가 보일 거예요. 왼쪽은 미션 썸네일, 중간은 선착순 기간과 시간, 오른쪽은 총인원과 참여 인원 수, 제일 오른쪽엔 "신청" 버튼이 있어요.</p>
+      <p>④ "신청" 버튼을 누르면 관리자가 확인 후, 개별 카톡으로 미션을 드려요.</p>
+      <p>⑤ 미션을 완료하면 매주 월요일~일요일 참여건수를 합산하여, 그다음주 화요일에 개별로 일괄 입금해드리고 있어요.</p>
+
+      <h3>▶ 정산 방식</h3>
+      <p>메인 페이지에 "누적포인트"와 "주간포인트"로 정산 받으실 금액을 안내드리고 있어요.</p>
+      <p>누적포인트는 계속 누적되는 금액이고, 주간포인트는 정산 받아야 할 금액이에요.</p>
+      <p>출금신청은 주간포인트가 10,000원 이상 쌓여야 가능해요. 주간포인트 옆에 "미출금 금액"이 표시되고, 그 아래 "출금 신청하기" 버튼이 있어요.</p>
+    </div>
+    <button class="btn btn-primary" style="margin-top:26px;" onclick="finishTutorial()">확인했어요, 시작할게요</button>
+  </div>
+</div>
+
+<!-- HOME SCREEN -->
+<div class="screen" id="screen-home">
+  <header>
+    <div class="logo">인생은 <span>선착순</span></div>
+    <div class="subtitle" id="welcome-text">환영합니다</div>
+  </header>
+  <div class="screen active" style="padding:16px;">
+    <div class="points-card">
+      <div class="points-row">
+        <div>
+          <div class="points-label">누적포인트</div>
+          <div class="points-amount" id="total-points">0<span>원</span></div>
+        </div>
+        <div class="divider-v"></div>
+        <div>
+          <div class="points-label">주간포인트 (미출금 금액)</div>
+          <div class="points-amount sub" id="unpaid-points">0<span>원</span></div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-text" id="progress-text">10,000원까지 0원 남았어요</div>
+      <button class="btn btn-outline withdraw-btn" id="withdraw-btn" onclick="openWithdrawModal()" disabled>10,000원 이상부터 출금 신청 가능</button>
+    </div>
+
+    <div class="participate-banner" onclick="openParticipateModal()">
+      <div class="pb-icon">💬</div>
+      <div style="flex:1;">
+        <div class="pb-title">참여하기</div>
+        <div class="pb-desc">카카오톡으로 문의하고 미션을 시작해보세요</div>
+      </div>
+      <div class="pb-arrow">›</div>
+    </div>
+
+    <div id="my-requests-wrap"></div>
+
+    <div class="sec-title">선착순 리스트 <span class="sec-badge">선착순</span></div>
+    <div id="mission-list"><div class="empty">미션을 불러오는 중...</div></div>
+  </div>
+</div>
+
+<!-- HISTORY SCREEN -->
+<div class="screen" id="screen-history">
+  <header>
+    <div class="logo">참여 <span>내역</span></div>
+    <div class="subtitle">날짜별 미션 참여 기록이에요</div>
+  </header>
+  <div style="padding:16px;">
+    <div id="history-list"><div class="empty">불러오는 중...</div></div>
+  </div>
+</div>
+
+<!-- MY PAGE SCREEN -->
+<div class="screen" id="screen-my">
+  <header>
+    <div class="logo">마이 <span>페이지</span></div>
+  </header>
+  <div style="padding:16px;">
+    <div class="points-card">
+      <div class="points-label">이름</div>
+      <div style="font-size:18px; font-weight:700; margin-bottom:14px;" id="my-name">-</div>
+      <div class="points-label">휴대폰</div>
+      <div style="font-size:14px; margin-bottom:14px;" id="my-phone">-</div>
+      <div class="points-label">아이디</div>
+      <div style="font-size:14px;" id="my-id">-</div>
+    </div>
+    <button class="btn btn-outline" style="margin-bottom:10px;" onclick="showScreen('tutorial-view')">이용안내 다시보기</button>
+    <div class="sec-title">출금 신청 내역</div>
+    <div id="withdrawal-list"><div class="empty">출금 신청 내역이 없어요</div></div>
+    <button class="btn btn-outline" style="margin-top:24px;" onclick="doLogout()">로그아웃</button>
+  </div>
+</div>
+
+<!-- TUTORIAL VIEW (재열람용, 뒤로가기 있음) -->
+<div class="screen" id="screen-tutorial-view">
+  <header>
+    <div class="logo">이용 <span>안내</span></div>
+  </header>
+  <div class="auth-wrap" style="padding-top:16px;">
+    <div class="tutorial-box">
+      <h3 style="margin-top:0;">▶ 참여 신청</h3>
+      <p>① 회원가입 하고, 로그인 하신 후</p>
+      <p>② 메인화면에서 "참여하기" 버튼을 누르시면 카카오톡 ID가 보일 거예요. 그 카톡으로 대화를 걸어주세요.<br>카톡으로 <b style="color:var(--text)">"인생은 선착순"</b>이라고 6글자 남겨주세요!</p>
+      <h3>▶ 진행 방식</h3>
+      <p>③ 메인화면에 "선착순 리스트"가 보일 거예요. 왼쪽은 미션 썸네일, 중간은 선착순 기간과 시간, 오른쪽은 총인원과 참여 인원 수, 제일 오른쪽엔 "신청" 버튼이 있어요.</p>
+      <p>④ "신청" 버튼을 누르면 관리자가 확인 후, 개별 카톡으로 미션을 드려요.</p>
+      <p>⑤ 미션을 완료하면 매주 월요일~일요일 참여건수를 합산하여, 그다음주 화요일에 개별로 일괄 입금해드리고 있어요.</p>
+      <h3>▶ 정산 방식</h3>
+      <p>메인 페이지에 "누적포인트"와 "주간포인트"로 정산 받으실 금액을 안내드리고 있어요.</p>
+      <p>출금신청은 주간포인트가 10,000원 이상 쌓여야 가능해요.</p>
+    </div>
+    <button class="btn btn-outline" style="margin-top:26px;" onclick="switchTab('my')">마이페이지로 돌아가기</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottom-nav" style="display:none;">
+  <div class="nav-item active" data-tab="home" onclick="switchTab('home')"><span class="nav-icon">🏃</span>미션</div>
+  <div class="nav-item" data-tab="history" onclick="switchTab('history')"><span class="nav-icon">📋</span>내역</div>
+  <div class="nav-item" data-tab="my" onclick="switchTab('my')"><span class="nav-icon">👤</span>마이페이지</div>
+</div>
+
+<!-- FIND ID MODAL -->
+<div class="modal-overlay" id="find-id-modal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('find-id-modal')">✕</span>
+    <div class="modal-title">아이디 찾기</div>
+    <div class="modal-sub">가입하신 이름과 휴대폰번호를 입력해주세요</div>
+    <div class="field"><label>이름</label><input type="text" id="find-id-name" placeholder="홍길동"></div>
+    <div class="field"><label>휴대폰 번호</label><input type="tel" id="find-id-phone" placeholder="010-0000-0000"></div>
+    <div class="err" id="find-id-err"></div>
+    <div class="ok-msg" id="find-id-ok"></div>
+    <button class="btn btn-primary" onclick="doFindId()">아이디 찾기</button>
+  </div>
+</div>
+
+<!-- FIND PASSWORD MODAL -->
+<div class="modal-overlay" id="find-pw-modal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('find-pw-modal')">✕</span>
+    <div class="modal-title">비밀번호 찾기</div>
+    <div class="modal-sub">이름, 휴대폰번호, 아이디를 입력하시면 관리자 확인 후 카카오톡으로 임시 비밀번호를 안내드려요</div>
+    <div class="field"><label>이름</label><input type="text" id="find-pw-name" placeholder="홍길동"></div>
+    <div class="field"><label>휴대폰 번호</label><input type="tel" id="find-pw-phone" placeholder="010-0000-0000"></div>
+    <div class="field"><label>아이디</label><input type="text" id="find-pw-id" placeholder="아이디"></div>
+    <div class="err" id="find-pw-err"></div>
+    <div class="ok-msg" id="find-pw-ok"></div>
+    <button class="btn btn-primary" onclick="doFindPw()">재설정 요청하기</button>
+  </div>
+</div>
+
+<!-- PARTICIPATE MODAL -->
+<div class="modal-overlay" id="participate-modal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeModal('participate-modal')">✕</span>
+    <div class="modal-title">참여하기</div>
+    <div class="modal-sub">아래 카카오톡 ID로 대화를 걸어주세요</div>
+    <div class="kakao-box">
+      <div style="font-size:13px; color:var(--text-dim);">카카오톡 ID</div>
+      <div class="kakao-id-text" id="kakao-id-display">불러오는 중...</div>
+      <div class="copy-btn" onclick="copyKakaoId()">복사하기</div>
+    </div>
+    <div class="notice-box">카톡으로 <b>"인생은 선착순"</b>이라고 6글자만 남겨주시면 안내드릴게요!</div>
+  </div>
+</div>
+
+<!-- WITHDRAW MODAL -->
+<div class="modal-overlay" id="withdraw-modal">
+  <div class="modal-box">
+    <span class="modal-close" onclick="closeWithdrawModal()">✕</span>
+    <div class="modal-title">출금 신청</div>
+    <div class="modal-sub">현금 입금을 위해 아래 정보가 필요해요</div>
+    <div class="notice-box">주민등록번호는 세금 신고(원천징수) 목적으로만 사용되며, 입금 처리 완료 후 관련 법령에 따라 안전하게 보관·파기돼요.</div>
+    <div class="field"><label>예금주명</label><input type="text" id="wd-holder" placeholder="예금주 이름"></div>
+    <div class="field"><label>은행명</label><input type="text" id="wd-bank" placeholder="예: 국민은행"></div>
+    <div class="field"><label>계좌번호</label><input type="text" id="wd-account" placeholder="- 없이 숫자만 입력"></div>
+    <div class="field"><label>주민등록번호</label><input type="text" id="wd-rrn" placeholder="000000-0000000"></div>
+    <div class="field">
+      <label>통장사본 (이미지)</label>
+      <label class="file-input-label" id="file-label">사진 선택하기</label>
+      <input type="file" id="wd-bankbook" accept="image/*" style="display:none;" onchange="handleFileSelect(this)">
+    </div>
+    <div class="err" id="wd-err"></div>
+    <button class="btn btn-primary" onclick="submitWithdraw()" style="margin-top:10px;">출금 신청하기</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBlknVm0g_fJn6Ol2oEFSRlSDKc78RctKw",
+  authDomain: "instantmission-8265e.firebaseapp.com",
+  projectId: "instantmission-8265e",
+  storageBucket: "instantmission-8265e.firebasestorage.app",
+  messagingSenderId: "36060679309",
+  appId: "1:36060679309:web:70e58d9b5deb76fb9d66c4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+const EMAIL_DOMAIN = "instantmission.app";
+const WITHDRAW_THRESHOLD = 10000;
+let currentUser = null;
+let currentUserData = null;
+let bankbookFile = null;
+let adminKakaoId = "";
+
+function idToEmail(id){ return id.trim().toLowerCase() + "@" + EMAIL_DOMAIN; }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(()=>{ t.style.display = 'none'; }, 2200);
+}
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+// ---------- Signup ----------
+async function doSignup(){
+  const name = document.getElementById('signup-name').value.trim();
+  const phone = document.getElementById('signup-phone').value.trim();
+  const id = document.getElementById('signup-id').value.trim();
+  const pw = document.getElementById('signup-pw').value;
+  const errEl = document.getElementById('signup-err');
+  errEl.style.display = 'none';
+
+  if(!name || !phone || !id || !pw){
+    errEl.textContent = '모든 항목을 입력해주세요';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!/^[a-zA-Z0-9]+$/.test(id)){
+    errEl.textContent = '아이디는 영문/숫자만 가능해요';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(pw.length < 6){
+    errEl.textContent = '비밀번호는 6자 이상이어야 해요';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try{
+    const dup = await db.collection('users').where('loginId','==',id.toLowerCase()).limit(1).get();
+    if(!dup.empty){
+      errEl.textContent = '이미 사용 중인 아이디예요';
+      errEl.style.display = 'block';
+      return;
+    }
+    const cred = await auth.createUserWithEmailAndPassword(idToEmail(id), pw);
+    await db.collection('users').doc(cred.user.uid).set({
+      name, phone, loginId: id.toLowerCase(),
+      totalPoints: 0,
+      unpaidPoints: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showScreen('tutorial');
+  }catch(e){
+    errEl.textContent = '가입에 실패했어요: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function finishTutorial(){
+  showScreen('home');
+  switchTab('home');
+}
+
+// ---------- Login ----------
+function doLogin(){
+  const id = document.getElementById('login-id').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  if(!id || !pw){
+    errEl.textContent = '아이디와 비밀번호를 입력해주세요';
+    errEl.style.display = 'block';
+    return;
+  }
+  auth.signInWithEmailAndPassword(idToEmail(id), pw)
+    .catch(e=>{
+      errEl.textContent = '아이디 또는 비밀번호가 올바르지 않아요';
+      errEl.style.display = 'block';
+    });
+}
+function doLogout(){ auth.signOut(); }
+
+auth.onAuthStateChanged(async (user)=>{
+  if(user){
+    currentUser = user;
+    const doc = await db.collection('users').doc(user.uid).get();
+    if(doc.exists){
+      currentUserData = doc.data();
+      document.getElementById('bottom-nav').style.display = 'flex';
+      document.getElementById('welcome-text').textContent = currentUserData.name + '님, 오늘도 화이팅!';
+      document.getElementById('my-name').textContent = currentUserData.name;
+      document.getElementById('my-phone').textContent = currentUserData.phone;
+      document.getElementById('my-id').textContent = currentUserData.loginId;
+      showScreen('home');
+      switchTab('home');
+      listenUserData();
+      listenMissions();
+      listenMyRequests();
+      listenHistory();
+      listenWithdrawals();
+      loadAdminKakaoId();
+    }
+  } else {
+    currentUser = null;
+    currentUserData = null;
+    document.getElementById('bottom-nav').style.display = 'none';
+    showScreen('login');
+  }
+});
+
+// ---------- Find ID / Password ----------
+function openFindIdModal(){
+  document.getElementById('find-id-name').value = '';
+  document.getElementById('find-id-phone').value = '';
+  document.getElementById('find-id-err').style.display = 'none';
+  document.getElementById('find-id-ok').style.display = 'none';
+  document.getElementById('find-id-modal').classList.add('active');
+}
+async function doFindId(){
+  const name = document.getElementById('find-id-name').value.trim();
+  const phone = document.getElementById('find-id-phone').value.trim();
+  const errEl = document.getElementById('find-id-err');
+  const okEl = document.getElementById('find-id-ok');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  if(!name || !phone){
+    errEl.textContent = '이름과 휴대폰번호를 입력해주세요';
+    errEl.style.display = 'block';
+    return;
+  }
+  try{
+    const snap = await db.collection('users').where('name','==',name).where('phone','==',phone).limit(1).get();
+    if(snap.empty){
+      errEl.textContent = '일치하는 회원 정보가 없어요';
+      errEl.style.display = 'block';
+      return;
+    }
+    const id = snap.docs[0].data().loginId;
+    const masked = id.length > 2 ? id.slice(0,2) + '*'.repeat(id.length-2) : id;
+    okEl.textContent = '회원님의 아이디는 "' + masked + '" 입니다';
+    okEl.style.display = 'block';
+  }catch(e){
+    errEl.textContent = '조회에 실패했어요';
+    errEl.style.display = 'block';
+  }
+}
+
+function openFindPwModal(){
+  document.getElementById('find-pw-name').value = '';
+  document.getElementById('find-pw-phone').value = '';
+  document.getElementById('find-pw-id').value = '';
+  document.getElementById('find-pw-err').style.display = 'none';
+  document.getElementById('find-pw-ok').style.display = 'none';
+  document.getElementById('find-pw-modal').classList.add('active');
+}
+async function doFindPw(){
+  const name = document.getElementById('find-pw-name').value.trim();
+  const phone = document.getElementById('find-pw-phone').value.trim();
+  const id = document.getElementById('find-pw-id').value.trim().toLowerCase();
+  const errEl = document.getElementById('find-pw-err');
+  const okEl = document.getElementById('find-pw-ok');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  if(!name || !phone || !id){
+    errEl.textContent = '모든 항목을 입력해주세요';
+    errEl.style.display = 'block';
+    return;
+  }
+  try{
+    const snap = await db.collection('users').where('name','==',name).where('phone','==',phone).where('loginId','==',id).limit(1).get();
+    if(snap.empty){
+      errEl.textContent = '일치하는 회원 정보가 없어요';
+      errEl.style.display = 'block';
+      return;
+    }
+    await db.collection('passwordResetRequests').add({
+      name, phone, loginId: id,
+      status: '대기',
+      requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    okEl.textContent = '요청이 접수됐어요. 관리자 확인 후 카카오톡으로 임시 비밀번호를 안내드릴게요.';
+    okEl.style.display = 'block';
+  }catch(e){
+    errEl.textContent = '요청에 실패했어요';
+    errEl.style.display = 'block';
+  }
+}
+
+// ---------- Participate (Kakao) ----------
+async function loadAdminKakaoId(){
+  try{
+    const doc = await db.collection('settings').doc('general').get();
+    adminKakaoId = doc.exists ? (doc.data().adminKakaoId || '미설정') : '미설정';
+  }catch(e){ adminKakaoId = '미설정'; }
+}
+function openParticipateModal(){
+  document.getElementById('kakao-id-display').textContent = adminKakaoId || '불러오는 중...';
+  document.getElementById('participate-modal').classList.add('active');
+}
+function copyKakaoId(){
+  navigator.clipboard.writeText(adminKakaoId).then(()=> showToast('복사했어요!'));
+}
+
+// ---------- Realtime listeners ----------
+function listenUserData(){
+  db.collection('users').doc(currentUser.uid).onSnapshot(doc=>{
+    if(!doc.exists) return;
+    currentUserData = doc.data();
+    const total = currentUserData.totalPoints || 0;
+    const unpaid = currentUserData.unpaidPoints || 0;
+    document.getElementById('total-points').innerHTML = total.toLocaleString() + '<span>원</span>';
+    document.getElementById('unpaid-points').innerHTML = unpaid.toLocaleString() + '<span>원</span>';
+    const pct = Math.min(100, (unpaid / WITHDRAW_THRESHOLD) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    const btn = document.getElementById('withdraw-btn');
+    if(unpaid >= WITHDRAW_THRESHOLD){
+      document.getElementById('progress-text').textContent = '출금 신청이 가능해요!';
+      btn.disabled = false;
+      btn.textContent = '출금 신청하기';
+    } else {
+      const remain = WITHDRAW_THRESHOLD - unpaid;
+      document.getElementById('progress-text').textContent = remain.toLocaleString() + '원까지 남았어요';
+      btn.disabled = true;
+      btn.textContent = '10,000원 이상부터 출금 신청 가능';
+    }
+  });
+}
+
+function listenMissions(){
+  db.collection('missions').where('active','==',true)
+    .onSnapshot(snap=>{
+      const wrap = document.getElementById('mission-list');
+      if(snap.empty){
+        wrap.innerHTML = '<div class="empty">오늘 등록된 미션이 없어요</div>';
+        return;
+      }
+      let docs = [];
+      snap.forEach(doc=> docs.push(doc));
+      docs.sort((a,b)=>{
+        const ta = a.data().createdAt ? a.data().createdAt.toMillis() : 0;
+        const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      wrap.innerHTML = '';
+      docs.forEach(doc=>{
+        const m = doc.data();
+        const applied = m.appliedCount || 0;
+        const full = applied >= (m.slots||0);
+        wrap.innerHTML += `
+          <div class="mission-item">
+            <img class="mission-thumb" src="${m.thumbnailUrl || 'https://via.placeholder.com/52'}" onerror="this.src='https://via.placeholder.com/52'">
+            <div class="mission-info">
+              <div class="mission-name">${m.title}</div>
+              <div class="mission-period">${m.periodText || '기간 미정'}</div>
+              <div class="mission-count ${full?'full':''}">${applied}/${m.slots}명 참여</div>
+            </div>
+            <button class="apply-btn" ${full?'disabled':''} onclick="applyMission('${doc.id}', '${m.title.replace(/'/g,"\\'")}')">${full?'마감':'신청'}</button>
+          </div>
+        `;
+      });
+    });
+}
+
+async function applyMission(missionId, missionTitle){
+  try{
+    const dup = await db.collection('requests')
+      .where('userId','==',currentUser.uid)
+      .where('missionId','==',missionId)
+      .limit(1).get();
+    if(!dup.empty){
+      showToast('이미 신청한 미션이에요');
+      return;
+    }
+    await db.runTransaction(async (tx)=>{
+      const mRef = db.collection('missions').doc(missionId);
+      const mDoc = await tx.get(mRef);
+      const applied = mDoc.data().appliedCount || 0;
+      const slots = mDoc.data().slots || 0;
+      if(applied >= slots) throw new Error('마감된 미션이에요');
+
+      const reqRef = db.collection('requests').doc();
+      tx.set(reqRef, {
+        userId: currentUser.uid,
+        userName: currentUserData.name,
+        missionId, missionTitle,
+        status: '신청됨',
+        requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      tx.update(mRef, { appliedCount: applied + 1 });
+    });
+    showToast('신청 완료! 카카오톡을 확인해주세요');
+  }catch(e){
+    showToast(e.message || '신청에 실패했어요');
+  }
+}
+
+function listenMyRequests(){
+  db.collection('requests')
+    .where('userId','==',currentUser.uid)
+    .where('status','==','신청됨')
+    .onSnapshot(snap=>{
+      const wrap = document.getElementById('my-requests-wrap');
+      if(snap.empty){ wrap.innerHTML = ''; return; }
+      let html = '<div class="sec-title">내 신청 현황 <span class="sec-badge">확인 중</span></div>';
+      snap.forEach(doc=>{
+        const r = doc.data();
+        html += `
+          <div class="request-card">
+            <div class="rq-title">📩 ${r.missionTitle}</div>
+            <div class="rq-desc">신청이 접수됐어요. 관리자 확인 후 카카오톡으로 안내드릴게요!</div>
+          </div>
+        `;
+      });
+      wrap.innerHTML = html;
+    });
+}
+
+function listenHistory(){
+  db.collection('requests')
+    .where('userId','==',currentUser.uid)
+    .where('status','==','완료')
+    .onSnapshot(snap=>{
+      const wrap = document.getElementById('history-list');
+      if(snap.empty){
+        wrap.innerHTML = '<div class="empty">아직 완료된 미션이 없어요</div>';
+        return;
+      }
+      let docs = [];
+      snap.forEach(doc=> docs.push(doc));
+      docs.sort((a,b)=>{
+        const ta = a.data().completedAt ? a.data().completedAt.toMillis() : 0;
+        const tb = b.data().completedAt ? b.data().completedAt.toMillis() : 0;
+        return tb - ta;
+      });
+      wrap.innerHTML = '';
+      docs.forEach(doc=>{
+        const r = doc.data();
+        const date = r.completedAt ? r.completedAt.toDate() : new Date();
+        const dateStr = `${date.getMonth()+1}월 ${date.getDate()}일`;
+        wrap.innerHTML += `
+          <div class="history-item">
+            <div class="h-left"><div class="h-title">${r.missionTitle}</div><div class="h-date">${dateStr}</div></div>
+            <div class="h-amount">+${(r.amount||1000).toLocaleString()}원</div>
+          </div>
+        `;
+      });
+    }, ()=>{ document.getElementById('history-list').innerHTML = '<div class="empty">불러오는 중 문제가 발생했어요</div>'; });
+}
+
+function listenWithdrawals(){
+  db.collection('withdrawals').where('userId','==',currentUser.uid)
+    .onSnapshot(snap=>{
+      const wrap = document.getElementById('withdrawal-list');
+      if(snap.empty){ wrap.innerHTML = '<div class="empty">출금 신청 내역이 없어요</div>'; return; }
+      let docs = [];
+      snap.forEach(doc=> docs.push(doc));
+      docs.sort((a,b)=>{
+        const ta = a.data().requestedAt ? a.data().requestedAt.toMillis() : 0;
+        const tb = b.data().requestedAt ? b.data().requestedAt.toMillis() : 0;
+        return tb - ta;
+      });
+      wrap.innerHTML = '';
+      docs.forEach(doc=>{
+        const w = doc.data();
+        const date = w.requestedAt ? w.requestedAt.toDate() : new Date();
+        const dateStr = `${date.getMonth()+1}월 ${date.getDate()}일`;
+        const statusColor = w.status === '완료' ? 'var(--success)' : 'var(--accent)';
+        wrap.innerHTML += `
+          <div class="history-item">
+            <div class="h-left"><div class="h-title">${w.amount.toLocaleString()}원 출금 신청</div><div class="h-date">${dateStr}</div></div>
+            <div class="h-amount" style="color:${statusColor}">${w.status}</div>
+          </div>
+        `;
+      });
+    }, ()=>{});
+}
+
+// ---------- Tabs ----------
+function switchTab(tab){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  if(navItem) navItem.classList.add('active');
+  ['home','history','my'].forEach(s=>document.getElementById('screen-'+s).classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+}
+
+// ---------- Withdraw modal ----------
+function openWithdrawModal(){ document.getElementById('withdraw-modal').classList.add('active'); }
+function closeWithdrawModal(){ document.getElementById('withdraw-modal').classList.remove('active'); }
+function handleFileSelect(input){
+  if(input.files && input.files[0]){
+    bankbookFile = input.files[0];
+    document.getElementById('file-label').textContent = '✓ ' + bankbookFile.name;
+  }
+}
+function obfuscate(str){ return btoa(unescape(encodeURIComponent(str))).split('').reverse().join(''); }
+
+async function submitWithdraw(){
+  const holder = document.getElementById('wd-holder').value.trim();
+  const bank = document.getElementById('wd-bank').value.trim();
+  const account = document.getElementById('wd-account').value.trim();
+  const rrn = document.getElementById('wd-rrn').value.trim();
+  const errEl = document.getElementById('wd-err');
+  errEl.style.display = 'none';
+
+  if(!holder || !bank || !account || !rrn){
+    errEl.textContent = '모든 항목을 입력해주세요';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!bankbookFile){
+    errEl.textContent = '통장사본을 첨부해주세요';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try{
+    showToast('신청 처리 중...');
+    const fileRef = storage.ref(`bankbooks/${currentUser.uid}_${Date.now()}.jpg`);
+    await fileRef.put(bankbookFile);
+    const bankbookUrl = await fileRef.getDownloadURL();
+    const amount = currentUserData.unpaidPoints || 0;
+
+    await db.runTransaction(async (tx)=>{
+      const userRef = db.collection('users').doc(currentUser.uid);
+      const wdRef = db.collection('withdrawals').doc();
+      tx.set(wdRef, {
+        userId: currentUser.uid, userName: currentUserData.name,
+        amount, holder, bank, account,
+        rrnEncoded: obfuscate(rrn), bankbookUrl,
+        status: '대기',
+        requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      tx.update(userRef, { unpaidPoints: 0 });
+    });
+
+    closeWithdrawModal();
+    showToast('출금 신청이 완료됐어요!');
+    document.getElementById('wd-holder').value = '';
+    document.getElementById('wd-bank').value = '';
+    document.getElementById('wd-account').value = '';
+    document.getElementById('wd-rrn').value = '';
+    bankbookFile = null;
+    document.getElementById('file-label').textContent = '사진 선택하기';
+  }catch(e){
+    errEl.textContent = '신청에 실패했어요: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
