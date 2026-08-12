@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인생은 선착순 - 관리자</title>
+<style>
+  :root{
+    --bg:#0F1115; --card:#1A1D24; --card-2:#20242D; --accent:#FFB020; --accent-2:#FF6B4A;
+    --text:#F5F5F0; --text-dim:#9A9DA6; --line:#2A2E38; --danger:#FF5A5A; --success:#3DDC97;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; min-height:100vh;}
+  .container{max-width:1000px; margin:0 auto; padding:20px;}
+  header{display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--line); margin-bottom:20px;}
+  .logo{font-size:19px; font-weight:800;}
+  .logo span{color:var(--accent);}
+  .logout-link{font-size:12px; color:var(--text-dim); cursor:pointer;}
+  .gate{max-width:360px; margin:100px auto; text-align:center;}
+  .gate h1{font-size:22px; margin-bottom:8px;}
+  .gate p{font-size:13px; color:var(--text-dim); margin-bottom:24px;}
+  input, select, textarea{width:100%; padding:13px 14px; background:var(--card); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:14px; outline:none; margin-bottom:10px;}
+  input:focus, select:focus, textarea:focus{border-color:var(--accent);}
+  .btn{padding:12px 18px; border-radius:10px; border:none; font-size:13.5px; font-weight:700; cursor:pointer;}
+  .btn-primary{background:var(--accent); color:#1A1200;}
+  .btn-outline{background:transparent; border:1px solid var(--line); color:var(--text);}
+  .btn-danger{background:var(--danger); color:#fff;}
+  .btn-success{background:var(--success); color:#04231A;}
+  .btn-block{width:100%;}
+  .err{color:var(--danger); font-size:12.5px; margin-bottom:10px; display:none;}
+  .tabs{display:flex; gap:6px; margin-bottom:20px; overflow-x:auto;}
+  .tab-btn{padding:10px 16px; border-radius:10px; background:var(--card); border:1px solid var(--line); color:var(--text-dim); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;}
+  .tab-btn.active{background:var(--accent); color:#1A1200; border-color:var(--accent);}
+  .panel{display:none;} .panel.active{display:block;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:14px;}
+  .card-title{font-size:15px; font-weight:700; margin-bottom:14px;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; padding:10px 8px; color:var(--text-dim); font-weight:600; border-bottom:1px solid var(--line); font-size:12px;}
+  td{padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  .thumb-sm{width:36px; height:36px; border-radius:8px; object-fit:cover;}
+  .pill{display:inline-block; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:700;}
+  .pill-active{background:rgba(61,220,151,0.15); color:var(--success);}
+  .pill-full{background:rgba(255,90,90,0.15); color:var(--danger);}
+  .pill-wait{background:rgba(255,176,32,0.15); color:var(--accent);}
+  .pill-done{background:rgba(61,220,151,0.15); color:var(--success);}
+  .search-box{margin-bottom:14px;}
+  .action-row{display:flex; gap:6px; align-items:center;}
+  .empty{text-align:center; padding:30px; color:var(--text-dim); font-size:13px;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#fff; color:#111; padding:12px 22px; border-radius:30px; font-size:13px; font-weight:600; z-index:200; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+  .rrn-mask{cursor:pointer; color:var(--accent); text-decoration:underline; font-size:12px;}
+  .link-a{color:var(--accent); font-size:12px;}
+  small.hint{color:var(--text-dim); font-size:11.5px; display:block; margin-top:-4px; margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="gate" id="gate">
+  <h1>인생은 <span style="color:var(--accent)">선착순</span></h1>
+  <p>관리자 로그인</p>
+  <input type="email" id="admin-email" placeholder="관리자 이메일">
+  <input type="password" id="admin-pw" placeholder="비밀번호">
+  <div class="err" id="admin-err"></div>
+  <button class="btn btn-primary btn-block" onclick="doAdminLogin()">로그인</button>
+</div>
+
+<div class="container" id="main-app" style="display:none;">
+  <header>
+    <div class="logo">인생은 <span>선착순</span> · 관리자</div>
+    <div class="logout-link" onclick="doAdminLogout()">로그아웃</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="missions" onclick="switchTab('missions')">미션 관리</button>
+    <button class="tab-btn" data-tab="requests" onclick="switchTab('requests')">신청 · 완료 처리</button>
+    <button class="tab-btn" data-tab="users" onclick="switchTab('users')">회원 목록</button>
+    <button class="tab-btn" data-tab="withdrawals" onclick="switchTab('withdrawals')">출금 관리</button>
+    <button class="tab-btn" data-tab="pwrequests" onclick="switchTab('pwrequests')">비밀번호 요청</button>
+    <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">설정</button>
+  </div>
+
+  <div class="panel active" id="panel-missions">
+    <div class="card">
+      <div class="card-title">오늘의 미션 등록</div>
+      <input type="text" id="m-title" placeholder="광고명 (예: OO앱 설치하기)">
+      <label style="display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:6px;">썸네일 이미지 (아무 크기나 선택하면 자동으로 300×300px JPG로 변환돼요)</label>
+      <input type="file" id="m-thumb-file" accept="image/*" style="margin-bottom:10px;" onchange="previewThumb(this)">
+      <img id="m-thumb-preview" style="display:none; width:60px; height:60px; border-radius:10px; object-fit:cover; margin-bottom:10px;">
+      <input type="text" id="m-period" placeholder="선착순 기간/시간 (예: 8/12 09:00 ~ 8/12 18:00)">
+      <input type="number" id="m-slots" placeholder="선착순 총인원 (예: 30)">
+      <button class="btn btn-primary" onclick="addMission()">미션 등록하기</button>
+    </div>
+    <div class="card">
+      <div class="card-title">등록된 미션 목록</div>
+      <div id="mission-table-wrap"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-requests">
+    <div class="card">
+      <div class="card-title">신청 완료 처리</div>
+      <small class="hint">유저가 신청하면 여기 표시돼요. 카카오톡에서 미션 완료를 확인한 후, 완료 처리하고 포인트를 지급하세요.</small>
+      <div id="request-table-wrap"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-users">
+    <div class="card">
+      <div class="card-title">회원 목록</div>
+      <input type="text" class="search-box" id="user-search" placeholder="이름 또는 전화번호로 검색" oninput="renderUsers()">
+      <div id="user-table-wrap"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-withdrawals">
+    <div class="card">
+      <div class="card-title">출금 신청 관리</div>
+      <div id="withdrawal-table-wrap"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-pwrequests">
+    <div class="card">
+      <div class="card-title">비밀번호 재설정 요청</div>
+      <small class="hint">Firebase 콘솔 → Authentication → Users에서 아래 내부이메일을 찾아 비밀번호를 직접 변경한 후, 카카오톡으로 임시 비밀번호를 안내하고 완료 처리하세요.</small>
+      <div id="pwrequest-table-wrap"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-settings">
+    <div class="card">
+      <div class="card-title">참여용 카카오톡 ID 설정</div>
+      <small class="hint">유저 앱의 "참여하기" 버튼을 누르면 이 ID가 표시돼요.</small>
+      <input type="text" id="setting-kakao" placeholder="카카오톡 ID">
+      <button class="btn btn-primary" onclick="saveSettings()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBlknVm0g_fJn6Ol2oEFSRlSDKc78RctKw",
+  authDomain: "instantmission-8265e.firebaseapp.com",
+  projectId: "instantmission-8265e",
+  storageBucket: "instantmission-8265e.firebasestorage.app",
+  messagingSenderId: "36060679309",
+  appId: "1:36060679309:web:70e58d9b5deb76fb9d66c4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+let allUsers = [];
+let allMissions = [];
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(()=>{ t.style.display = 'none'; }, 2200);
+}
+
+function doAdminLogin(){
+  const email = document.getElementById('admin-email').value.trim();
+  const pw = document.getElementById('admin-pw').value;
+  const errEl = document.getElementById('admin-err');
+  errEl.style.display = 'none';
+  if(!email || !pw){
+    errEl.textContent = '이메일과 비밀번호를 입력해주세요';
+    errEl.style.display = 'block';
+    return;
+  }
+  auth.signInWithEmailAndPassword(email, pw).catch(e=>{
+    errEl.textContent = '로그인 정보가 올바르지 않아요';
+    errEl.style.display = 'block';
+  });
+}
+function doAdminLogout(){ auth.signOut(); }
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    listenMissions();
+    listenUsers();
+    listenRequests();
+    listenWithdrawals();
+    listenPwRequests();
+    loadSettings();
+  } else {
+    document.getElementById('gate').style.display = 'block';
+    document.getElementById('main-app').style.display = 'none';
+  }
+});
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ---------- Settings ----------
+async function loadSettings(){
+  const doc = await db.collection('settings').doc('general').get();
+  if(doc.exists){
+    document.getElementById('setting-kakao').value = doc.data().adminKakaoId || '';
+  }
+}
+function saveSettings(){
+  const kakao = document.getElementById('setting-kakao').value.trim();
+  db.collection('settings').doc('general').set({ adminKakaoId: kakao }, {merge:true})
+    .then(()=> showToast('저장됐어요!'));
+}
+
+// ---------- Missions ----------
+let selectedThumbFile = null;
+
+function processImage(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const size = 300;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        // 정중앙 기준 정사각형으로 잘라내기
+        const minSide = Math.min(img.width, img.height);
+        const sx = (img.width - minSide) / 2;
+        const sy = (img.height - minSide) / 2;
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+
+        let quality = 0.9;
+        function tryCompress(){
+          canvas.toBlob((blob)=>{
+            if(!blob){ reject(new Error('이미지 변환에 실패했어요')); return; }
+            if(blob.size > 500*1024 && quality > 0.3){
+              quality -= 0.1;
+              tryCompress();
+            } else {
+              resolve(blob);
+            }
+          }, 'image/jpeg', quality);
+        }
+        tryCompress();
+      };
+      img.onerror = ()=> reject(new Error('이미지를 읽을 수 없어요'));
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=> reject(new Error('파일을 읽을 수 없어요'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function previewThumb(input){
+  if(input.files && input.files[0]){
+    const preview = document.getElementById('m-thumb-preview');
+    try{
+      showToast('이미지 변환 중...');
+      const processedBlob = await processImage(input.files[0]);
+      selectedThumbFile = processedBlob;
+      preview.src = URL.createObjectURL(processedBlob);
+      preview.style.display = 'inline-block';
+      showToast(`변환 완료! (${Math.round(processedBlob.size/1024)}KB)`);
+    }catch(e){
+      showToast('이미지 변환 실패: ' + e.message);
+    }
+  }
+}
+
+async function addMission(){
+  const title = document.getElementById('m-title').value.trim();
+  const period = document.getElementById('m-period').value.trim();
+  const slots = parseInt(document.getElementById('m-slots').value);
+  if(!title || !slots || slots <= 0){
+    showToast('광고명과 선착순 인원을 입력해주세요');
+    return;
+  }
+  try{
+    let thumbnailUrl = '';
+    if(selectedThumbFile){
+      showToast('썸네일 업로드 중...');
+      const fileRef = storage.ref(`mission-thumbnails/${Date.now()}.jpg`);
+      await fileRef.put(selectedThumbFile);
+      thumbnailUrl = await fileRef.getDownloadURL();
+    }
+
+    await db.collection('missions').add({
+      title, thumbnailUrl, periodText: period,
+      slots, appliedCount: 0,
+      active: true,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('미션이 등록됐어요!');
+    document.getElementById('m-title').value = '';
+    document.getElementById('m-thumb-file').value = '';
+    document.getElementById('m-thumb-preview').style.display = 'none';
+    document.getElementById('m-period').value = '';
+    document.getElementById('m-slots').value = '';
+    selectedThumbFile = null;
+  }catch(e){
+    showToast('등록 실패: ' + e.message);
+  }
+}
+
+function listenMissions(){
+  db.collection('missions').orderBy('createdAt','desc').onSnapshot(snap=>{
+    allMissions = [];
+    snap.forEach(doc=> allMissions.push({id:doc.id, ...doc.data()}));
+    renderMissions();
+  });
+}
+
+function renderMissions(){
+  const wrap = document.getElementById('mission-table-wrap');
+  if(allMissions.length === 0){
+    wrap.innerHTML = '<div class="empty">등록된 미션이 없어요</div>';
+    return;
+  }
+  let html = '<table><tr><th></th><th>광고명</th><th>기간</th><th>신청/총원</th><th>상태</th><th></th></tr>';
+  allMissions.forEach(m=>{
+    const applied = m.appliedCount || 0;
+    const full = applied >= (m.slots||0);
+    html += `
+      <tr>
+        <td><img class="thumb-sm" src="${m.thumbnailUrl || 'https://via.placeholder.com/36'}" onerror="this.src='https://via.placeholder.com/36'"></td>
+        <td>${m.title}</td>
+        <td style="font-size:11.5px; color:var(--text-dim);">${m.periodText||'-'}</td>
+        <td>${applied} / ${m.slots}명</td>
+        <td><span class="pill ${m.active && !full ? 'pill-active' : 'pill-full'}">${!m.active ? '비활성' : (full ? '마감' : '진행중')}</span></td>
+        <td class="action-row">
+          <button class="btn btn-outline" style="padding:6px 10px; font-size:11.5px;" onclick="toggleMission('${m.id}', ${!m.active})">${m.active ? '비활성화' : '활성화'}</button>
+          <button class="btn btn-danger" style="padding:6px 10px; font-size:11.5px;" onclick="deleteMission('${m.id}')">삭제</button>
+        </td>
+      </tr>
+    `;
+  });
+  html += '</table>';
+  wrap.innerHTML = html;
+}
+function toggleMission(id, newState){ db.collection('missions').doc(id).update({active:newState}); }
+function deleteMission(id){ if(confirm('이 미션을 삭제할까요?')) db.collection('missions').doc(id).delete(); }
+
+// ---------- Users ----------
+function listenUsers(){
+  db.collection('users').orderBy('createdAt','desc').onSnapshot(snap=>{
+    allUsers = [];
+    snap.forEach(doc=> allUsers.push({id:doc.id, ...doc.data()}));
+    renderUsers();
+  });
+}
+function renderUsers(){
+  const wrap = document.getElementById('user-table-wrap');
+  const keyword = (document.getElementById('user-search').value || '').trim();
+  const filtered = allUsers.filter(u => !keyword || u.name.includes(keyword) || (u.phone||'').includes(keyword));
+  if(filtered.length === 0){ wrap.innerHTML = '<div class="empty">회원이 없어요</div>'; return; }
+  let html = '<table><tr><th>이름</th><th>연락처</th><th>아이디</th><th>누적포인트</th><th>주간(미출금)</th></tr>';
+  filtered.forEach(u=>{
+    html += `
+      <tr>
+        <td>${u.name}</td>
+        <td>${u.phone}</td>
+        <td>${u.loginId||'-'}</td>
+        <td>${(u.totalPoints||0).toLocaleString()}원</td>
+        <td>${(u.unpaidPoints||0).toLocaleString()}원</td>
+      </tr>
+    `;
+  });
+  html += '</table>';
+  wrap.innerHTML = html;
+}
+
+// ---------- Requests (완료 처리) ----------
+function listenRequests(){
+  db.collection('requests').where('status','==','신청됨')
+    .onSnapshot(snap=>{
+      const wrap = document.getElementById('request-table-wrap');
+      if(snap.empty){ wrap.innerHTML = '<div class="empty">처리할 신청이 없어요</div>'; return; }
+      let docs = [];
+      snap.forEach(doc=> docs.push(doc));
+      docs.sort((a,b)=>{
+        const ta = a.data().requestedAt ? a.data().requestedAt.toMillis() : 0;
+        const tb = b.data().requestedAt ? b.data().requestedAt.toMillis() : 0;
+        return tb - ta;
+      });
+      let html = '<table><tr><th>이름</th><th>미션명</th><th>신청일시</th><th>지급 포인트</th><th></th></tr>';
+      docs.forEach(doc=>{
+        const r = doc.data();
+        const date = r.requestedAt ? r.requestedAt.toDate() : new Date();
+        const dateStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
+        html += `
+          <tr>
+            <td>${r.userName}</td>
+            <td>${r.missionTitle}</td>
+            <td>${dateStr}</td>
+            <td><input type="number" id="amount-${doc.id}" value="1000" style="width:90px; margin-bottom:0; padding:6px 8px;"></td>
+            <td><button class="btn btn-success" style="padding:6px 12px; font-size:11.5px;" onclick="completeRequest('${doc.id}', '${r.userId}')">완료 처리</button></td>
+          </tr>
+        `;
+      });
+      html += '</table>';
+      wrap.innerHTML = html;
+    });
+}
+
+function completeRequest(requestId, userId){
+  const amountInput = document.getElementById(`amount-${requestId}`);
+  const amount = parseInt(amountInput.value) || 1000;
+
+  db.runTransaction(async (tx)=>{
+    const reqRef = db.collection('requests').doc(requestId);
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await tx.get(userRef);
+    const total = userDoc.data().totalPoints || 0;
+    const unpaid = userDoc.data().unpaidPoints || 0;
+
+    tx.update(reqRef, { status: '완료', amount, completedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    tx.update(userRef, { totalPoints: total + amount, unpaidPoints: unpaid + amount });
+  }).then(()=>{
+    showToast('완료 처리 및 포인트 지급 완료!');
+  }).catch(e=>{
+    showToast('처리 실패: ' + e.message);
+  });
+}
+
+// ---------- Withdrawals ----------
+function deobfuscate(str){
+  try{ return decodeURIComponent(escape(atob(str.split('').reverse().join('')))); }
+  catch(e){ return '복호화 실패'; }
+}
+function listenWithdrawals(){
+  db.collection('withdrawals').orderBy('requestedAt','desc').onSnapshot(snap=>{
+    const wrap = document.getElementById('withdrawal-table-wrap');
+    if(snap.empty){ wrap.innerHTML = '<div class="empty">출금 신청이 없어요</div>'; return; }
+    let html = '<table><tr><th>이름</th><th>금액</th><th>은행/계좌</th><th>주민번호</th><th>통장사본</th><th>상태</th><th></th></tr>';
+    snap.forEach(doc=>{
+      const w = doc.data();
+      html += `
+        <tr>
+          <td>${w.userName}</td>
+          <td>${w.amount.toLocaleString()}원</td>
+          <td>${w.bank} ${w.account}<br><small style="color:var(--text-dim)">${w.holder}</small></td>
+          <td><span class="rrn-mask" onclick="revealRRN(this, '${w.rrnEncoded}')">보기</span></td>
+          <td><a class="link-a" href="${w.bankbookUrl}" target="_blank">이미지 보기</a></td>
+          <td><span class="pill ${w.status==='완료'?'pill-done':'pill-wait'}">${w.status}</span></td>
+          <td>${w.status==='대기' ? `<button class="btn btn-success" style="padding:6px 10px; font-size:11.5px;" onclick="completeWithdrawal('${doc.id}')">입금완료</button>` : ''}</td>
+        </tr>
+      `;
+    });
+    html += '</table>';
+    wrap.innerHTML = html;
+  });
+}
+function revealRRN(el, encoded){
+  el.textContent = deobfuscate(encoded);
+  el.style.color = 'var(--danger)';
+  el.onclick = null;
+}
+function completeWithdrawal(id){
+  if(confirm('입금 완료 처리하시겠어요?')){
+    db.collection('withdrawals').doc(id).update({ status: '완료', completedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('입금 완료 처리했어요');
+  }
+}
+
+// ---------- Password reset requests ----------
+function listenPwRequests(){
+  db.collection('passwordResetRequests').where('status','==','대기')
+    .onSnapshot(snap=>{
+      const wrap = document.getElementById('pwrequest-table-wrap');
+      if(snap.empty){ wrap.innerHTML = '<div class="empty">대기 중인 요청이 없어요</div>'; return; }
+      let docs = [];
+      snap.forEach(doc=> docs.push(doc));
+      docs.sort((a,b)=>{
+        const ta = a.data().requestedAt ? a.data().requestedAt.toMillis() : 0;
+        const tb = b.data().requestedAt ? b.data().requestedAt.toMillis() : 0;
+        return tb - ta;
+      });
+      let html = '<table><tr><th>이름</th><th>연락처</th><th>아이디</th><th>내부이메일(Firebase콘솔 검색용)</th><th></th></tr>';
+      docs.forEach(doc=>{
+        const r = doc.data();
+        const internalEmail = r.loginId + '@instantmission.app';
+        html += `
+          <tr>
+            <td>${r.name}</td>
+            <td>${r.phone}</td>
+            <td>${r.loginId}</td>
+            <td style="font-size:11.5px; color:var(--text-dim);">${internalEmail}</td>
+            <td><button class="btn btn-success" style="padding:6px 10px; font-size:11.5px;" onclick="completePwRequest('${doc.id}')">완료 처리</button></td>
+          </tr>
+        `;
+      });
+      html += '</table>';
+      wrap.innerHTML = html;
+    });
+}
+function completePwRequest(id){
+  if(confirm('카카오톡으로 임시 비밀번호를 안내하셨나요? 완료 처리할까요?')){
+    db.collection('passwordResetRequests').doc(id).update({ status: '완료', completedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('완료 처리했어요');
+  }
+}
+</script>
+</body>
+</html>
