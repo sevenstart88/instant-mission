@@ -375,7 +375,7 @@ function renderUsers(){
         <td>${(u.unpaidPoints||0).toLocaleString()}원</td>
         <td class="action-row">
           <button class="btn btn-outline" style="padding:6px 10px; font-size:11.5px;" onclick="openEditUser('${u.id}','${(u.name||'').replace(/'/g,"\\'")}','${u.phone||''}')">수정</button>
-          <button class="btn btn-danger" style="padding:6px 10px; font-size:11.5px;" onclick="deleteUser('${u.id}','${(u.name||'').replace(/'/g,"\\'")}')">삭제</button>
+          <button class="btn btn-danger" style="padding:6px 10px; font-size:11.5px;" onclick="deleteUser('${u.id}','${(u.name||'').replace(/'/g,"\\'")}','${u.loginId||''}')">삭제</button>
         </td>
       </tr>
     `;
@@ -403,10 +403,20 @@ function openEditUser(userId, currentName, currentPhone){
   });
 }
 
-function deleteUser(userId, userName){
-  if(!confirm(`"${userName}" 회원을 정말 삭제할까요?\n\n주의: Firestore의 회원 데이터만 삭제되며, Firebase Authentication 로그인 계정은 별도로 남아있어요. 완전히 삭제하려면 Firebase 콘솔 → Authentication → 사용자 목록에서 해당 계정도 함께 삭제해주세요.`)) return;
+function deleteUser(userId, userName, loginId){
+  if(!confirm(`"${userName}" 회원을 정말 삭제할까요?\n\n삭제하면 회원 정보(Firestore)는 즉시 지워지고, 로그인 계정 삭제를 위해 Firebase 콘솔이 자동으로 열려요. 콘솔에서 이메일을 붙여넣기(Ctrl+V) 해서 검색 후 삭제해주세요.`)) return;
+
+  const internalEmail = loginId ? (loginId + '@instantmission.app') : '';
+
   db.collection('users').doc(userId).delete().then(()=>{
-    showToast('회원을 삭제했어요');
+    showToast('회원 정보를 삭제했어요');
+    if(internalEmail){
+      navigator.clipboard.writeText(internalEmail).catch(()=>{});
+      setTimeout(()=>{
+        window.open('https://console.firebase.google.com/project/instantmission-8265e/authentication/users', '_blank');
+        showToast('이메일이 복사됐어요! 콘솔 검색창에 붙여넣고 계정을 삭제해주세요: ' + internalEmail);
+      }, 600);
+    }
   }).catch(e=>{
     showToast('삭제 실패: ' + e.message);
   });
