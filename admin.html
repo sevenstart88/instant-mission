@@ -485,10 +485,11 @@ function openEditUser(userId, currentName, currentPhone){
     showToast('이름과 연락처를 모두 입력해주세요');
     return;
   }
-  db.collection('users').doc(userId).update({
-    name: newName.trim(),
-    phone: newPhone.trim()
-  }).then(()=>{
+  const updates = { name: newName.trim(), phone: newPhone.trim() };
+  Promise.all([
+    db.collection('users').doc(userId).update(updates),
+    db.collection('userLookup').doc(userId).update(updates).catch(()=>{})
+  ]).then(()=>{
     showToast('회원 정보를 수정했어요');
   }).catch(e=>{
     showToast('수정 실패: ' + e.message);
@@ -500,7 +501,10 @@ function deleteUser(userId, userName, loginId){
 
   const internalEmail = loginId ? (loginId + '@instantmission.app') : '';
 
-  db.collection('users').doc(userId).delete().then(()=>{
+  Promise.all([
+    db.collection('users').doc(userId).delete(),
+    db.collection('userLookup').doc(userId).delete().catch(()=>{})
+  ]).then(()=>{
     showToast('회원 정보를 삭제했어요');
     if(internalEmail){
       navigator.clipboard.writeText(internalEmail).catch(()=>{});
