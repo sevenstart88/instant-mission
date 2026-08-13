@@ -47,7 +47,7 @@
     animation: run 0.6s steps(2) infinite;
   }
   @keyframes run{ 0%{transform:translateY(0);} 50%{transform:translateY(-2px) scaleX(-1);} 100%{transform:translateY(0);} }
-  .logo{font-size:18px; font-weight:800; letter-spacing:-0.3px;}
+  .logo{font-size:16px; font-weight:800; letter-spacing:0.3px; font-family:'Galmuri11','Galmuri9',monospace;}
   .logo span{color:var(--accent); text-shadow:0 0 12px rgba(255,201,64,0.5);}
   .subtitle{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
 
@@ -55,7 +55,7 @@
   .screen.active{display:block;}
 
   .auth-wrap{padding:50px 24px 24px;}
-  .auth-title{font-size:26px; font-weight:800; line-height:1.3; margin-bottom:8px;}
+  .auth-title{font-size:24px; font-weight:800; line-height:1.5; margin-bottom:8px; font-family:'Galmuri11','Galmuri9',monospace;}
   .auth-sub{font-size:14px; color:var(--text-dim); margin-bottom:28px;}
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:13px; color:var(--text-dim); margin-bottom:6px;}
@@ -270,7 +270,8 @@
     <div class="points-card">
       <div class="points-label">포인트(원)</div>
       <div class="points-amount" id="total-points" style="font-size:28px;">0<span>원</span></div>
-      <button class="btn btn-outline withdraw-btn" id="withdraw-btn" onclick="openWithdrawModal()" disabled style="margin-top:14px;">10,000원 이상부터 출금 신청 가능</button>
+      <div class="progress-bar" style="margin-top:14px;"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <button class="btn btn-outline withdraw-btn" id="withdraw-btn" onclick="openWithdrawModal()" disabled style="margin-top:10px;">10,000원 이상부터 출금 신청 가능</button>
     </div>
 
     <div class="participate-banner" onclick="openParticipateModal()">
@@ -658,6 +659,8 @@ function listenUserData(){
     currentUserData = doc.data();
     const total = currentUserData.totalPoints || 0;
     document.getElementById('total-points').innerHTML = total.toLocaleString() + '<span>원</span>';
+    const pct = Math.min(100, (total / WITHDRAW_THRESHOLD) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
     const btn = document.getElementById('withdraw-btn');
     if(total >= WITHDRAW_THRESHOLD){
       btn.disabled = false;
@@ -691,14 +694,23 @@ function listenMyAppliedMissions(){
   db.collection('requests').where('userId','==',currentUser.uid)
     .onSnapshot(snap=>{
       myAppliedMissionIds = new Set();
-      snap.forEach(doc=> myAppliedMissionIds.add(doc.data().missionId));
+      snap.forEach(doc=>{
+        if(doc.data().status !== '반려됨'){
+          myAppliedMissionIds.add(doc.data().missionId);
+        }
+      });
       renderMissionList();
     });
 }
 
 function renderMissionList(){
   const wrap = document.getElementById('mission-list');
-  const visibleDocs = latestMissionDocs.filter(doc => !myAppliedMissionIds.has(doc.id));
+  const visibleDocs = latestMissionDocs.filter(doc => {
+    if(myAppliedMissionIds.has(doc.id)) return false;
+    const m = doc.data();
+    if(m.targetUserIds && m.targetUserIds.length > 0 && !m.targetUserIds.includes(currentUser.uid)) return false;
+    return true;
+  });
   if(visibleDocs.length === 0){
     wrap.innerHTML = '<div class="empty">참여 가능한 미션이 없어요</div>';
     return;
@@ -779,29 +791,35 @@ function listenMyRequests(){
 function listenHistory(){
   db.collection('requests')
     .where('userId','==',currentUser.uid)
-    .where('status','==','완료')
     .onSnapshot(snap=>{
       const wrap = document.getElementById('history-list');
-      if(snap.empty){
+      let docs = [];
+      snap.forEach(doc=>{
+        if(doc.data().status === '완료' || doc.data().status === '반려됨') docs.push(doc);
+      });
+      if(docs.length === 0){
         wrap.innerHTML = '<div class="empty">아직 완료된 미션이 없어요</div>';
         return;
       }
-      let docs = [];
-      snap.forEach(doc=> docs.push(doc));
       docs.sort((a,b)=>{
-        const ta = a.data().completedAt ? a.data().completedAt.toMillis() : 0;
-        const tb = b.data().completedAt ? b.data().completedAt.toMillis() : 0;
+        const ta = (a.data().completedAt || a.data().rejectedAt) ? (a.data().completedAt || a.data().rejectedAt).toMillis() : 0;
+        const tb = (b.data().completedAt || b.data().rejectedAt) ? (b.data().completedAt || b.data().rejectedAt).toMillis() : 0;
         return tb - ta;
       });
       wrap.innerHTML = '';
       docs.forEach(doc=>{
         const r = doc.data();
-        const date = r.completedAt ? r.completedAt.toDate() : new Date();
+        const isRejected = r.status === '반려됨';
+        const dateObj = isRejected ? r.rejectedAt : r.completedAt;
+        const date = dateObj ? dateObj.toDate() : new Date();
         const dateStr = `${date.getMonth()+1}월 ${date.getDate()}일`;
+        const amountHtml = isRejected
+          ? `<span style="color:var(--danger); font-weight:800; font-size:12px;">반려됨</span>`
+          : `<div class="h-amount">+${(r.amount||1000).toLocaleString()}원</div>`;
         wrap.innerHTML += `
           <div class="history-item">
             <div class="h-left"><div class="h-title">${r.missionTitle}</div><div class="h-date">${dateStr}</div></div>
-            <div class="h-amount">+${(r.amount||1000).toLocaleString()}원</div>
+            ${amountHtml}
           </div>
         `;
       });
