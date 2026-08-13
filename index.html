@@ -463,21 +463,22 @@ async function doSignup(){
   }
 
   try{
-    const dup = await db.collection('users').where('loginId','==',id.toLowerCase()).limit(1).get();
-    if(!dup.empty){
-      errEl.textContent = '이미 사용 중인 아이디예요';
-      errEl.style.display = 'block';
-      return;
-    }
     const cred = await auth.createUserWithEmailAndPassword(idToEmail(id), pw);
     await db.collection('users').doc(cred.user.uid).set({
       name, phone, loginId: id.toLowerCase(),
       totalPoints: 0,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    await db.collection('userLookup').doc(cred.user.uid).set({
+      name, phone, loginId: id.toLowerCase()
+    });
     showScreen('tutorial');
   }catch(e){
-    errEl.textContent = '가입에 실패했어요: ' + e.message;
+    if(e.code === 'auth/email-already-in-use'){
+      errEl.textContent = '이미 사용 중인 아이디예요';
+    } else {
+      errEl.textContent = '가입에 실패했어요: ' + e.message;
+    }
     errEl.style.display = 'block';
   }
 }
@@ -556,7 +557,7 @@ async function doFindId(){
     return;
   }
   try{
-    const snap = await db.collection('users').where('name','==',name).where('phone','==',phone).limit(1).get();
+    const snap = await db.collection('userLookup').where('name','==',name).where('phone','==',phone).limit(1).get();
     if(snap.empty){
       errEl.textContent = '일치하는 회원 정보가 없어요';
       errEl.style.display = 'block';
@@ -594,7 +595,7 @@ async function doFindPw(){
     return;
   }
   try{
-    const snap = await db.collection('users').where('name','==',name).where('phone','==',phone).where('loginId','==',id).limit(1).get();
+    const snap = await db.collection('userLookup').where('name','==',name).where('phone','==',phone).where('loginId','==',id).limit(1).get();
     if(snap.empty){
       errEl.textContent = '일치하는 회원 정보가 없어요';
       errEl.style.display = 'block';
