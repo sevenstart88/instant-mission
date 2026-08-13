@@ -137,8 +137,15 @@
     </div>
     <div class="card">
       <div class="card-title">이용안내 문구 수정</div>
-      <small class="hint">유저 앱의 미션 화면과 회원가입 직후 화면에 표시되는 안내 문구예요. 줄바꿈은 그대로 반영돼요.</small>
-      <textarea id="setting-tutorial" rows="14" style="font-size:13px; line-height:1.6;" placeholder="이용안내 문구를 입력하세요"></textarea>
+      <small class="hint">유저 앱의 미션 화면과 회원가입 직후 화면에 표시되는 안내 문구예요. 텍스트를 드래그해서 선택한 후 아래 버튼으로 서식을 적용하세요.</small>
+      <div style="display:flex; gap:6px; margin-bottom:8px;">
+        <button type="button" class="btn btn-outline" style="padding:8px 12px; font-size:13px; font-weight:900;" onclick="formatTutorial('bold')">B</button>
+        <button type="button" class="btn btn-outline" style="padding:8px 12px; font-size:13px; text-decoration:underline;" onclick="formatTutorial('underline')">U</button>
+        <input type="color" id="tutorial-color-picker" value="#ffb020" style="width:44px; height:38px; padding:2px; margin-bottom:0; cursor:pointer;" onchange="applyTutorialColor(this.value)">
+        <button type="button" class="btn btn-outline" style="padding:8px 12px; font-size:12px;" onclick="formatTutorial('removeFormat')">서식 지우기</button>
+      </div>
+      <div id="setting-tutorial-editor" contenteditable="true"
+        style="width:100%; min-height:280px; padding:14px 16px; background:var(--card-2); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:13px; line-height:1.7; margin-bottom:10px; overflow-y:auto;"></div>
       <button class="btn btn-primary" onclick="saveSettings()">저장하기</button>
     </div>
   </div>
@@ -214,32 +221,38 @@ function switchTab(tab){
 }
 
 // ---------- Settings ----------
-const DEFAULT_TUTORIAL = `▶ 참여 신청
-① 회원가입 하고, 로그인 하신 후
-② 메인화면에서 "참여하기" 버튼을 누르시면 카카오톡 ID가 보일 거예요. 그 카톡으로 대화를 걸어주세요.
-카톡으로 "인생은 선착순"이라고 6글자 남겨주세요!
-
-▶ 진행 방식
-③ 메인화면에 "선착순 리스트"가 보일 거예요. 왼쪽은 미션 썸네일, 중간은 선착순 기간과 시간, 오른쪽은 총인원과 참여 인원 수, 제일 오른쪽엔 "신청" 버튼이 있어요.
-④ "신청" 버튼을 누르면 관리자가 확인 후, 개별 카톡으로 미션을 드려요.
-⑤ 미션을 완료하면 매주 월요일~일요일 참여건수를 합산하여, 그다음주 화요일에 개별로 일괄 입금해드리고 있어요.
-
-▶ 정산 방식
-메인 페이지에 "누적포인트"와 "주간포인트"로 정산 받으실 금액을 안내드리고 있어요.
-누적포인트는 계속 누적되는 금액이고, 주간포인트는 정산 받아야 할 금액이에요.
+const DEFAULT_TUTORIAL = `<b>▶ 참여 신청</b><br>
+① 회원가입 하고, 로그인 하신 후<br>
+② 메인화면에서 "참여하기" 버튼을 누르시면 카카오톡 ID가 보일 거예요. 그 카톡으로 대화를 걸어주세요.<br>
+카톡으로 <b>"인생은 선착순"</b>이라고 6글자 남겨주세요!<br><br>
+<b>▶ 진행 방식</b><br>
+③ 메인화면에 "선착순 리스트"가 보일 거예요. 왼쪽은 미션 썸네일, 중간은 선착순 기간과 시간, 오른쪽은 총인원과 참여 인원 수, 제일 오른쪽엔 "신청" 버튼이 있어요.<br>
+④ "신청" 버튼을 누르면 관리자가 확인 후, 개별 카톡으로 미션을 드려요.<br>
+⑤ 미션을 완료하면 매주 월요일~일요일 참여건수를 합산하여, 그다음주 화요일에 개별로 일괄 입금해드리고 있어요.<br><br>
+<b>▶ 정산 방식</b><br>
+메인 페이지에 "누적포인트"와 "주간포인트"로 정산 받으실 금액을 안내드리고 있어요.<br>
+누적포인트는 계속 누적되는 금액이고, 주간포인트는 정산 받아야 할 금액이에요.<br>
 출금신청은 주간포인트가 10,000원 이상 쌓여야 가능해요. 주간포인트 옆에 "미출금 금액"이 표시되고, 그 아래 "출금 신청하기" 버튼이 있어요.`;
 
 async function loadSettings(){
   const doc = await db.collection('settings').doc('general').get();
   const data = doc.exists ? doc.data() : {};
   document.getElementById('setting-kakao').value = data.adminKakaoId || '';
-  document.getElementById('setting-tutorial').value = data.tutorialText || DEFAULT_TUTORIAL;
+  document.getElementById('setting-tutorial-editor').innerHTML = data.tutorialText || DEFAULT_TUTORIAL;
 }
 function saveSettings(){
   const kakao = document.getElementById('setting-kakao').value.trim();
-  const tutorial = document.getElementById('setting-tutorial').value;
+  const tutorial = document.getElementById('setting-tutorial-editor').innerHTML;
   db.collection('settings').doc('general').set({ adminKakaoId: kakao, tutorialText: tutorial }, {merge:true})
     .then(()=> showToast('저장됐어요!'));
+}
+function formatTutorial(command){
+  document.getElementById('setting-tutorial-editor').focus();
+  document.execCommand(command, false, null);
+}
+function applyTutorialColor(color){
+  document.getElementById('setting-tutorial-editor').focus();
+  document.execCommand('foreColor', false, color);
 }
 
 // ---------- Missions ----------
