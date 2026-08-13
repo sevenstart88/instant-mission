@@ -5,17 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>인생은 선착순</title>
 <style>
+  @import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
+
   :root{
-    --bg:#0F1115;
-    --card:#1A1D24;
-    --card-2:#20242D;
-    --accent:#FFB020;
-    --accent-2:#FF6B4A;
-    --text:#F5F5F0;
-    --text-dim:#9A9DA6;
-    --line:#2A2E38;
+    --bg:#0A0912;
+    --card:#1F1B33;
+    --card-2:#262045;
+    --accent:#FFC940;
+    --accent-2:#FF3D7F;
+    --mint:#3EE8B5;
+    --text:#F4F1FF;
+    --text-dim:#9691C4;
+    --line:#3A3260;
     --danger:#FF5A5A;
-    --success:#3DDC97;
+    --success:#3EE8B5;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
@@ -27,16 +30,26 @@
     min-height:100vh;
     padding-bottom:90px;
   }
+  .pixel{font-family:'Galmuri11','Galmuri9',monospace; letter-spacing:0.3px;}
+
   header{
-    padding:20px 20px 16px;
+    padding:18px 20px 16px;
     position:sticky; top:0;
     background:var(--bg);
     z-index:10;
-    border-bottom:1px solid var(--line);
+    border-bottom:2px solid var(--line);
+    display:flex; align-items:center; gap:12px;
   }
-  .logo{font-size:20px; font-weight:800; letter-spacing:-0.5px;}
-  .logo span{color:var(--accent);}
-  .subtitle{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .runner{width:26px; height:26px; flex-shrink:0; position:relative;}
+  .runner-sprite{
+    width:100%; height:100%; background-color:var(--accent);
+    clip-path: polygon(30% 0%,70% 0%,70% 15%,85% 15%,85% 40%,100% 45%,100% 60%,85% 60%,75% 45%,65% 45%,65% 70%,85% 100%,65% 100%,55% 75%,45% 75%,35% 100%,15% 100%,35% 65%,15% 55%,15% 40%,30% 35%);
+    animation: run 0.6s steps(2) infinite;
+  }
+  @keyframes run{ 0%{transform:translateY(0);} 50%{transform:translateY(-2px) scaleX(-1);} 100%{transform:translateY(0);} }
+  .logo{font-size:18px; font-weight:800; letter-spacing:-0.3px;}
+  .logo span{color:var(--accent); text-shadow:0 0 12px rgba(255,201,64,0.5);}
+  .subtitle{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
 
   .screen{display:none; padding:16px;}
   .screen.active{display:block;}
@@ -49,120 +62,132 @@
   input, select{
     width:100%; padding:14px 16px;
     background:var(--card);
-    border:1px solid var(--line);
-    border-radius:12px;
+    border:2px solid var(--line);
     color:var(--text);
     font-size:15px;
     outline:none;
   }
   input:focus, select:focus{border-color:var(--accent);}
-  .btn{width:100%; padding:15px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer;}
-  .btn-primary{background:var(--accent); color:#1A1200;}
-  .btn-outline{background:transparent; border:1px solid var(--line); color:var(--text);}
-  .btn-sm{padding:8px 14px; font-size:13px; border-radius:8px;}
+  .btn{width:100%; padding:15px; border:none; font-size:14px; font-weight:800; cursor:pointer; box-shadow:3px 3px 0 rgba(0,0,0,0.4);}
+  .btn-primary{background:var(--accent); color:#241A00;}
+  .btn-outline{background:var(--card-2); border:2px solid var(--line); color:var(--text); box-shadow:none;}
+  .btn-sm{padding:8px 14px; font-size:13px;}
   .link-row{display:flex; justify-content:center; gap:14px; margin-top:16px; font-size:12.5px; color:var(--text-dim);}
-  .link-row b{color:var(--accent); cursor:pointer; font-weight:600;}
+  .link-row b{color:var(--accent); cursor:pointer; font-weight:700;}
   .link-switch{text-align:center; margin-top:18px; font-size:13px; color:var(--text-dim);}
   .link-switch b{color:var(--accent); cursor:pointer;}
   .err{color:var(--danger); font-size:13px; margin-top:10px; display:none;}
   .ok-msg{color:var(--success); font-size:13px; margin-top:10px; display:none; line-height:1.5;}
 
   .points-card{
-    background:linear-gradient(135deg, var(--card-2), var(--card));
-    border:1px solid var(--line); border-radius:18px; padding:22px; margin-bottom:16px;
+    background:var(--card);
+    border:2px solid var(--line); padding:18px; margin-bottom:16px;
+    box-shadow:4px 4px 0 rgba(0,0,0,0.35);
   }
   .points-row{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px;}
-  .points-label{font-size:12px; color:var(--text-dim); margin-bottom:6px;}
-  .points-amount{font-size:26px; font-weight:800;}
-  .points-amount.sub{font-size:20px;}
-  .points-amount span{font-size:14px; font-weight:500; color:var(--text-dim);}
-  .divider-v{width:1px; background:var(--line); align-self:stretch; margin:0 16px;}
-  .progress-bar{height:8px; background:var(--line); border-radius:4px; margin:6px 0 6px; overflow:hidden;}
-  .progress-fill{height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:4px; transition:width .4s;}
-  .progress-text{font-size:12px; color:var(--text-dim);}
+  .points-label{font-size:10.5px; color:var(--text-dim); margin-bottom:6px;}
+  .points-amount{font-size:22px; font-weight:800; font-family:'Galmuri11',monospace; color:var(--accent); text-shadow:0 0 10px rgba(255,201,64,0.35);}
+  .points-amount.sub{font-size:18px; color:var(--mint); text-shadow:0 0 10px rgba(62,232,181,0.35);}
+  .points-amount span{font-size:12px; font-weight:500; color:var(--text-dim); text-shadow:none;}
+  .divider-v{width:2px; background:var(--line); align-self:stretch; margin:0 16px;}
+  .progress-bar{
+    height:14px; background:var(--line); margin:6px 0 6px; overflow:hidden;
+    background-image:repeating-linear-gradient(90deg, transparent 0 9%, var(--bg) 9% 10%);
+  }
+  .progress-fill{height:100%; background:var(--accent); box-shadow:0 0 10px rgba(255,201,64,0.5); transition:width .4s;
+    background-image:repeating-linear-gradient(90deg, transparent 0 9%, rgba(0,0,0,0.25) 9% 10%);
+  }
+  .progress-text{font-size:11px; color:var(--text-dim);}
   .withdraw-btn{margin-top:14px;}
 
   .participate-banner{
     display:flex; align-items:center; gap:12px;
-    background:rgba(255,176,32,0.12); border:1px solid rgba(255,176,32,0.35);
-    border-radius:14px; padding:14px 16px; margin-bottom:18px; cursor:pointer;
+    background:var(--accent-2); color:#3A0016;
+    border:none; padding:14px 16px; margin-bottom:18px; cursor:pointer;
+    box-shadow:4px 4px 0 rgba(0,0,0,0.35);
+    animation: pulse-glow 2s ease-in-out infinite;
   }
-  .participate-banner .pb-icon{font-size:24px;}
-  .participate-banner .pb-title{font-weight:700; font-size:14px;}
-  .participate-banner .pb-desc{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
-  .participate-banner .pb-arrow{margin-left:auto; color:var(--accent); font-size:18px;}
+  @keyframes pulse-glow{ 0%,100%{box-shadow:4px 4px 0 rgba(0,0,0,0.35);} 50%{box-shadow:4px 4px 0 rgba(0,0,0,0.35), 0 0 16px rgba(255,61,127,0.6);} }
+  .participate-banner .pb-icon{font-size:22px;}
+  .participate-banner .pb-title{font-weight:800; font-size:14px;}
+  .participate-banner .pb-desc{font-size:11px; opacity:0.85; margin-top:2px;}
+  .participate-banner .pb-arrow{margin-left:auto; font-size:18px; font-weight:800;}
 
-  .sec-title{font-size:15px; font-weight:700; margin:22px 0 12px; display:flex; align-items:center; gap:6px;}
-  .sec-badge{background:var(--accent-2); color:#fff; font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px;}
+  .sec-title{font-size:14px; font-weight:800; margin:22px 0 12px; display:flex; align-items:center; gap:8px;}
+  .sec-title::before{content:''; width:8px; height:8px; background:var(--mint); flex-shrink:0;}
+  .sec-badge{background:var(--accent-2); color:#fff; font-size:10.5px; font-weight:800; padding:3px 8px;}
 
   .request-card{
-    background:rgba(255,107,74,0.12); border:1px solid rgba(255,107,74,0.4);
-    border-radius:14px; padding:14px 16px; margin-bottom:10px;
+    background:var(--card-2); border:2px solid var(--accent-2);
+    padding:14px 16px; margin-bottom:10px;
+    box-shadow:3px 3px 0 rgba(0,0,0,0.3);
   }
-  .request-card .rq-title{font-weight:700; font-size:14px; margin-bottom:4px;}
-  .request-card .rq-desc{font-size:12.5px; color:var(--text-dim); line-height:1.5;}
+  .request-card .rq-title{font-weight:800; font-size:13.5px; margin-bottom:4px;}
+  .request-card .rq-desc{font-size:12px; color:var(--text-dim); line-height:1.5;}
 
   .mission-item{
     display:flex; align-items:center; gap:10px;
-    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    background:var(--card); border:2px solid var(--line);
     padding:12px; margin-bottom:10px;
+    box-shadow:3px 3px 0 rgba(0,0,0,0.3);
   }
-  .mission-thumb{width:52px; height:52px; border-radius:10px; background:var(--card-2); object-fit:cover; flex-shrink:0;}
+  .mission-thumb{width:48px; height:48px; background:var(--card-2); object-fit:cover; flex-shrink:0; border:2px solid var(--line);}
   .mission-info{flex:1; min-width:0;}
-  .mission-name{font-size:14px; font-weight:700; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .mission-period{font-size:11px; color:var(--text-dim); margin-bottom:3px;}
-  .mission-count{font-size:11.5px; color:var(--accent); font-weight:700;}
+  .mission-name{font-size:13.5px; font-weight:700; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mission-period{font-size:10.5px; color:var(--text-dim); margin-bottom:3px;}
+  .mission-count{font-size:11px; color:var(--mint); font-weight:800;}
   .mission-count.full{color:var(--text-dim);}
   .apply-btn{
-    flex-shrink:0; padding:9px 14px; border-radius:10px; border:none;
-    font-size:12.5px; font-weight:700; cursor:pointer; background:var(--accent); color:#1A1200;
+    flex-shrink:0; padding:9px 14px; border:none;
+    font-size:12px; font-weight:800; cursor:pointer; background:var(--accent); color:#241A00;
+    box-shadow:2px 2px 0 rgba(0,0,0,0.4);
   }
-  .apply-btn:disabled{background:var(--card-2); color:var(--text-dim); cursor:default;}
+  .apply-btn:disabled{background:var(--line); color:var(--text-dim); box-shadow:none; cursor:default;}
 
   .empty{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:13px;}
 
-  .history-item{display:flex; justify-content:space-between; align-items:center; padding:12px 4px; border-bottom:1px solid var(--line);}
-  .history-item .h-left .h-title{font-size:13.5px; font-weight:600;}
-  .history-item .h-left .h-date{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
-  .history-item .h-amount{font-size:14px; font-weight:700; color:var(--success);}
+  .history-item{display:flex; justify-content:space-between; align-items:center; padding:12px 4px; border-bottom:2px solid var(--line);}
+  .history-item .h-left .h-title{font-size:13px; font-weight:700;}
+  .history-item .h-left .h-date{font-size:11px; color:var(--text-dim); margin-top:2px;}
+  .history-item .h-amount{font-size:13.5px; font-weight:800; color:var(--success);}
 
   .bottom-nav{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-    max-width:480px; width:100%; background:var(--card); border-top:1px solid var(--line);
+    max-width:480px; width:100%; background:var(--card); border-top:2px solid var(--line);
     display:flex; padding:8px 0 max(8px, env(safe-area-inset-bottom)); z-index:20;
   }
-  .nav-item{flex:1; text-align:center; padding:8px 0; cursor:pointer; color:var(--text-dim); font-size:11px; font-weight:600;}
-  .nav-item .nav-icon{font-size:20px; display:block; margin-bottom:3px;}
+  .nav-item{flex:1; text-align:center; padding:8px 0; cursor:pointer; color:var(--text-dim); font-size:10.5px; font-weight:700;}
+  .nav-item .nav-icon{font-size:19px; display:block; margin-bottom:3px;}
   .nav-item.active{color:var(--accent);}
+  .nav-item.active .nav-icon{filter:drop-shadow(0 0 5px rgba(255,201,64,0.7));}
 
-  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:flex-end; justify-content:center;}
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; align-items:flex-end; justify-content:center;}
   .modal-overlay.active{display:flex;}
-  .modal-box{background:var(--card); width:100%; max-width:480px; border-radius:20px 20px 0 0; padding:24px 20px 30px; max-height:88vh; overflow-y:auto;}
+  .modal-box{background:var(--card); width:100%; max-width:480px; border-top:3px solid var(--accent); padding:24px 20px 30px; max-height:88vh; overflow-y:auto;}
   .modal-title{font-size:17px; font-weight:800; margin-bottom:4px;}
   .modal-sub{font-size:12.5px; color:var(--text-dim); margin-bottom:20px;}
   .modal-close{float:right; font-size:20px; color:var(--text-dim); cursor:pointer;}
   .notice-box{
-    background:rgba(255,176,32,0.1); border:1px solid rgba(255,176,32,0.3);
-    border-radius:10px; padding:12px 14px; font-size:12px; color:var(--accent); line-height:1.6; margin-bottom:18px;
+    background:var(--card-2); border:2px solid var(--accent);
+    padding:12px 14px; font-size:12px; color:var(--accent); line-height:1.6; margin-bottom:18px;
   }
-  .file-input-label{display:block; padding:14px; text-align:center; background:var(--card-2); border:1px dashed var(--line); border-radius:12px; font-size:13px; color:var(--text-dim); cursor:pointer;}
+  .file-input-label{display:block; padding:14px; text-align:center; background:var(--card-2); border:2px dashed var(--line); font-size:13px; color:var(--text-dim); cursor:pointer;}
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
-    background:#fff; color:#111; padding:12px 20px; border-radius:30px; font-size:13px; font-weight:600;
-    z-index:200; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.3);
+    background:var(--accent); color:#241A00; padding:12px 20px; font-size:13px; font-weight:800;
+    z-index:200; display:none; box-shadow:3px 3px 0 rgba(0,0,0,0.4);
   }
 
   .kakao-box{
-    background:var(--card-2); border:1px solid var(--line); border-radius:14px;
+    background:var(--card-2); border:2px solid var(--line);
     padding:18px; text-align:center; margin:16px 0;
   }
-  .kakao-id-text{font-size:20px; font-weight:800; color:var(--accent); margin:8px 0;}
-  .copy-btn{display:inline-block; padding:8px 16px; background:var(--card); border:1px solid var(--line); border-radius:20px; font-size:12px; color:var(--text); cursor:pointer;}
+  .kakao-id-text{font-size:19px; font-weight:800; color:var(--accent); margin:8px 0; font-family:'Galmuri11',monospace;}
+  .copy-btn{display:inline-block; padding:8px 16px; background:var(--card); border:2px solid var(--line); font-size:12px; color:var(--text); cursor:pointer;}
 
-  .tutorial-box{font-size:13.5px; line-height:1.9; color:var(--text);}
-  .tutorial-box h3{font-size:15px; color:var(--accent); margin:20px 0 8px;}
-  .tutorial-box h3:first-child{margin-top:0;}
-  .tutorial-box p{color:var(--text-dim); margin-bottom:4px;}
+  .tutorial-box{font-size:13px; line-height:1.9; color:var(--text-dim); background:var(--card); border:2px solid var(--line); padding:14px 16px; box-shadow:3px 3px 0 rgba(0,0,0,0.3);}
+  .tutorial-box b{color:var(--accent);}
+  .tutorial-title{font-size:18px; font-weight:900; margin:26px 0 12px; color:var(--accent); text-shadow:0 0 16px rgba(255,201,64,0.4); font-family:'Galmuri11',monospace;}
   .tutorial-greeting{font-size:16px; font-weight:700; margin-bottom:6px;}
   .tutorial-greeting + p{color:var(--text-dim); margin-bottom:20px;}
 </style>
@@ -227,7 +252,7 @@
   <div class="auth-wrap" style="padding-top:36px;">
     <div class="tutorial-greeting">안녕하세요! 회원님 👋</div>
     <p style="color:var(--text-dim); margin-bottom:20px;">[인생은 선착순] 개발자입니다~<br>사용하는 법을 간단히 안내드립니다.</p>
-    <div class="tutorial-box" id="tutorial-content-signup" style="white-space:pre-wrap;">불러오는 중...</div>
+    <div class="tutorial-box" id="tutorial-content-signup">불러오는 중...</div>
     <button class="btn btn-primary" style="margin-top:26px;" onclick="finishTutorial()">확인했어요, 시작할게요</button>
   </div>
 </div>
@@ -235,8 +260,11 @@
 <!-- HOME SCREEN -->
 <div class="screen" id="screen-home">
   <header>
-    <div class="logo">인생은 <span>선착순</span></div>
-    <div class="subtitle" id="welcome-text">환영합니다</div>
+    <div class="runner"><div class="runner-sprite"></div></div>
+    <div>
+      <div class="logo">인생은 <span>선착순</span></div>
+      <div class="subtitle" id="welcome-text">환영합니다</div>
+    </div>
   </header>
   <div style="padding:16px;">
     <div class="points-card">
@@ -265,13 +293,13 @@
       <div class="pb-arrow">›</div>
     </div>
 
-    <div class="sec-title">이용안내 📖</div>
-    <div class="tutorial-box" id="tutorial-content-home" style="white-space:pre-wrap; margin-bottom:20px;">불러오는 중...</div>
-
     <div id="my-requests-wrap"></div>
 
     <div class="sec-title">선착순 리스트 <span class="sec-badge">선착순</span></div>
     <div id="mission-list"><div class="empty">미션을 불러오는 중...</div></div>
+
+    <div class="tutorial-title">📖 이용안내</div>
+    <div class="tutorial-box" id="tutorial-content-home" style="margin-bottom:20px;">불러오는 중...</div>
   </div>
 </div>
 
@@ -503,6 +531,7 @@ auth.onAuthStateChanged(async (user)=>{
       switchTab('home');
       listenUserData();
       listenMissions();
+      listenMyAppliedMissions();
       listenMyRequests();
       listenHistory();
       listenWithdrawals();
@@ -595,19 +624,17 @@ async function doFindPw(){
 }
 
 // ---------- Participate (Kakao) ----------
-const DEFAULT_TUTORIAL = `▶ 참여 신청
-① 회원가입 하고, 로그인 하신 후
-② 메인화면에서 "참여하기" 버튼을 누르시면 카카오톡 ID가 보일 거예요. 그 카톡으로 대화를 걸어주세요.
-카톡으로 "인생은 선착순"이라고 6글자 남겨주세요!
-
-▶ 진행 방식
-③ 메인화면에 "선착순 리스트"가 보일 거예요. 왼쪽은 미션 썸네일, 중간은 선착순 기간과 시간, 오른쪽은 총인원과 참여 인원 수, 제일 오른쪽엔 "신청" 버튼이 있어요.
-④ "신청" 버튼을 누르면 관리자가 확인 후, 개별 카톡으로 미션을 드려요.
-⑤ 미션을 완료하면 매주 월요일~일요일 참여건수를 합산하여, 그다음주 화요일에 개별로 일괄 입금해드리고 있어요.
-
-▶ 정산 방식
-메인 페이지에 "누적포인트"와 "주간포인트"로 정산 받으실 금액을 안내드리고 있어요.
-누적포인트는 계속 누적되는 금액이고, 주간포인트는 정산 받아야 할 금액이에요.
+const DEFAULT_TUTORIAL = `<b>▶ 참여 신청</b><br>
+① 회원가입 하고, 로그인 하신 후<br>
+② 메인화면에서 "참여하기" 버튼을 누르시면 카카오톡 ID가 보일 거예요. 그 카톡으로 대화를 걸어주세요.<br>
+카톡으로 <b>"인생은 선착순"</b>이라고 6글자 남겨주세요!<br><br>
+<b>▶ 진행 방식</b><br>
+③ 메인화면에 "선착순 리스트"가 보일 거예요. 왼쪽은 미션 썸네일, 중간은 선착순 기간과 시간, 오른쪽은 총인원과 참여 인원 수, 제일 오른쪽엔 "신청" 버튼이 있어요.<br>
+④ "신청" 버튼을 누르면 관리자가 확인 후, 개별 카톡으로 미션을 드려요.<br>
+⑤ 미션을 완료하면 매주 월요일~일요일 참여건수를 합산하여, 그다음주 화요일에 개별로 일괄 입금해드리고 있어요.<br><br>
+<b>▶ 정산 방식</b><br>
+메인 페이지에 "누적포인트"와 "주간포인트"로 정산 받으실 금액을 안내드리고 있어요.<br>
+누적포인트는 계속 누적되는 금액이고, 주간포인트는 정산 받아야 할 금액이에요.<br>
 출금신청은 주간포인트가 10,000원 이상 쌓여야 가능해요. 주간포인트 옆에 "미출금 금액"이 표시되고, 그 아래 "출금 신청하기" 버튼이 있어요.`;
 
 async function loadAdminKakaoId(){
@@ -615,18 +642,17 @@ async function loadAdminKakaoId(){
     const doc = await db.collection('settings').doc('general').get();
     const data = doc.exists ? doc.data() : {};
     adminKakaoId = data.adminKakaoId || '미설정';
-    const tutorialText = data.tutorialText || DEFAULT_TUTORIAL;
+    const tutorialHtml = data.tutorialText || DEFAULT_TUTORIAL;
     const homeEl = document.getElementById('tutorial-content-home');
     const signupEl = document.getElementById('tutorial-content-signup');
-    if(homeEl) homeEl.textContent = tutorialText;
-    if(signupEl) signupEl.textContent = tutorialText;
+    if(homeEl) homeEl.innerHTML = tutorialHtml;
+    if(signupEl) signupEl.innerHTML = tutorialHtml;
   }catch(e){
     adminKakaoId = '미설정';
-    const fallback = DEFAULT_TUTORIAL;
     const homeEl = document.getElementById('tutorial-content-home');
     const signupEl = document.getElementById('tutorial-content-signup');
-    if(homeEl) homeEl.textContent = fallback;
-    if(signupEl) signupEl.textContent = fallback;
+    if(homeEl) homeEl.innerHTML = DEFAULT_TUTORIAL;
+    if(signupEl) signupEl.innerHTML = DEFAULT_TUTORIAL;
   }
 }
 function openParticipateModal(){
@@ -662,14 +688,12 @@ function listenUserData(){
   });
 }
 
+let latestMissionDocs = [];
+let myAppliedMissionIds = new Set();
+
 function listenMissions(){
   db.collection('missions').where('active','==',true)
     .onSnapshot(snap=>{
-      const wrap = document.getElementById('mission-list');
-      if(snap.empty){
-        wrap.innerHTML = '<div class="empty">오늘 등록된 미션이 없어요</div>';
-        return;
-      }
       let docs = [];
       snap.forEach(doc=> docs.push(doc));
       docs.sort((a,b)=>{
@@ -677,24 +701,44 @@ function listenMissions(){
         const tb = b.data().createdAt ? b.data().createdAt.toMillis() : 0;
         return tb - ta;
       });
-      wrap.innerHTML = '';
-      docs.forEach(doc=>{
-        const m = doc.data();
-        const applied = m.appliedCount || 0;
-        const full = applied >= (m.slots||0);
-        wrap.innerHTML += `
-          <div class="mission-item">
-            <img class="mission-thumb" src="${m.thumbnailUrl || 'https://via.placeholder.com/52'}" onerror="this.src='https://via.placeholder.com/52'">
-            <div class="mission-info">
-              <div class="mission-name">${m.title}</div>
-              <div class="mission-period">${m.periodText || '기간 미정'}</div>
-              <div class="mission-count ${full?'full':''}">${applied}/${m.slots}명 참여</div>
-            </div>
-            <button class="apply-btn" ${full?'disabled':''} onclick="applyMission('${doc.id}', '${m.title.replace(/'/g,"\\'")}')">${full?'마감':'신청'}</button>
-          </div>
-        `;
-      });
+      latestMissionDocs = docs;
+      renderMissionList();
     });
+}
+
+function listenMyAppliedMissions(){
+  db.collection('requests').where('userId','==',currentUser.uid)
+    .onSnapshot(snap=>{
+      myAppliedMissionIds = new Set();
+      snap.forEach(doc=> myAppliedMissionIds.add(doc.data().missionId));
+      renderMissionList();
+    });
+}
+
+function renderMissionList(){
+  const wrap = document.getElementById('mission-list');
+  const visibleDocs = latestMissionDocs.filter(doc => !myAppliedMissionIds.has(doc.id));
+  if(visibleDocs.length === 0){
+    wrap.innerHTML = '<div class="empty">참여 가능한 미션이 없어요</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  visibleDocs.forEach(doc=>{
+    const m = doc.data();
+    const applied = m.appliedCount || 0;
+    const full = applied >= (m.slots||0);
+    wrap.innerHTML += `
+      <div class="mission-item">
+        <img class="mission-thumb" src="${m.thumbnailUrl || 'https://via.placeholder.com/52'}" onerror="this.src='https://via.placeholder.com/52'">
+        <div class="mission-info">
+          <div class="mission-name">${m.title}</div>
+          <div class="mission-period">${m.periodText || '기간 미정'}</div>
+          <div class="mission-count ${full?'full':''}">${applied}/${m.slots}명 참여</div>
+        </div>
+        <button class="apply-btn" ${full?'disabled':''} onclick="applyMission('${doc.id}', '${m.title.replace(/'/g,"\\'")}')">${full?'마감':'신청'}</button>
+      </div>
+    `;
+  });
 }
 
 async function applyMission(missionId, missionTitle){
