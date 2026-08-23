@@ -231,7 +231,7 @@
     </div>
     <div class="field">
       <label>휴대폰 번호</label>
-      <input type="tel" id="signup-phone" placeholder="010-0000-0000">
+      <input type="tel" id="signup-phone" placeholder="010-0000-0000" oninput="formatPhoneInput(this)">
     </div>
     <div class="field">
       <label>아이디</label>
@@ -342,7 +342,7 @@
     <div class="modal-title">아이디 찾기</div>
     <div class="modal-sub">가입하신 이름과 휴대폰번호를 입력해주세요</div>
     <div class="field"><label>이름</label><input type="text" id="find-id-name" placeholder="홍길동"></div>
-    <div class="field"><label>휴대폰 번호</label><input type="tel" id="find-id-phone" placeholder="010-0000-0000"></div>
+    <div class="field"><label>휴대폰 번호</label><input type="tel" id="find-id-phone" placeholder="010-0000-0000" oninput="formatPhoneInput(this)"></div>
     <div class="err" id="find-id-err"></div>
     <div class="ok-msg" id="find-id-ok"></div>
     <button class="btn btn-primary" onclick="doFindId()">아이디 찾기</button>
@@ -356,7 +356,7 @@
     <div class="modal-title">비밀번호 찾기</div>
     <div class="modal-sub">이름, 휴대폰번호, 아이디를 입력하시면 가입하신 이메일로 재설정 링크를 보내드려요</div>
     <div class="field"><label>이름</label><input type="text" id="find-pw-name" placeholder="홍길동"></div>
-    <div class="field"><label>휴대폰 번호</label><input type="tel" id="find-pw-phone" placeholder="010-0000-0000"></div>
+    <div class="field"><label>휴대폰 번호</label><input type="tel" id="find-pw-phone" placeholder="010-0000-0000" oninput="formatPhoneInput(this)"></div>
     <div class="field"><label>아이디</label><input type="text" id="find-pw-id" placeholder="아이디"></div>
     <div class="err" id="find-pw-err"></div>
     <div class="ok-msg" id="find-pw-ok"></div>
@@ -432,6 +432,27 @@ function showToast(msg){
   t.style.display = 'block';
   setTimeout(()=>{ t.style.display = 'none'; }, 2200);
 }
+
+function formatPhoneInput(input){
+  let digits = input.value.replace(/[^\d]/g, '').slice(0, 11);
+  let formatted = digits;
+  if(digits.startsWith('02')){
+    if(digits.length > 9){
+      formatted = digits.slice(0,2) + '-' + digits.slice(2,6) + '-' + digits.slice(6,10);
+    } else if(digits.length > 5){
+      formatted = digits.slice(0,2) + '-' + digits.slice(2,5) + '-' + digits.slice(5,9);
+    } else if(digits.length > 2){
+      formatted = digits.slice(0,2) + '-' + digits.slice(2);
+    }
+  } else {
+    if(digits.length > 7){
+      formatted = digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7,11);
+    } else if(digits.length > 3){
+      formatted = digits.slice(0,3) + '-' + digits.slice(3,7);
+    }
+  }
+  input.value = formatted;
+}
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
@@ -470,9 +491,23 @@ async function doSignup(){
   }
 
   try{
-    const dup = await db.collection('userLookup').where('loginId','==',id.toLowerCase()).limit(1).get();
-    if(!dup.empty){
+    const [dupId, dupPhone, dupEmail] = await Promise.all([
+      db.collection('userLookup').where('loginId','==',id.toLowerCase()).limit(1).get(),
+      db.collection('userLookup').where('phone','==',phone).limit(1).get(),
+      db.collection('userLookup').where('email','==',email).limit(1).get()
+    ]);
+    if(!dupId.empty){
       errEl.textContent = '이미 사용 중인 아이디예요';
+      errEl.style.display = 'block';
+      return;
+    }
+    if(!dupPhone.empty){
+      errEl.textContent = '이미 가입된 휴대폰 번호예요';
+      errEl.style.display = 'block';
+      return;
+    }
+    if(!dupEmail.empty){
+      errEl.textContent = '이미 가입된 이메일이에요';
       errEl.style.display = 'block';
       return;
     }
