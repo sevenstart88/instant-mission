@@ -547,6 +547,9 @@ function openEditUser(userId, currentName, currentPhone){
 function deleteUser(userId, userName, email){
   if(!confirm(`"${userName}" 회원을 정말 삭제할까요?\n\n삭제하면 회원 정보(Firestore)는 즉시 지워지고, 로그인 계정 삭제를 위해 Firebase 콘솔이 자동으로 열려요. 콘솔에서 이메일을 붙여넣기(Ctrl+V) 해서 검색 후 삭제해주세요.`)) return;
 
+  // 팝업 차단을 피하려면 클릭한 바로 그 순간(동기적으로) 탭을 미리 열어둬야 해요
+  const consoleTab = email ? window.open('about:blank', '_blank') : null;
+
   Promise.all([
     db.collection('users').doc(userId).delete(),
     db.collection('userLookup').doc(userId).delete().catch(()=>{})
@@ -554,12 +557,16 @@ function deleteUser(userId, userName, email){
     showToast('회원 정보를 삭제했어요');
     if(email){
       navigator.clipboard.writeText(email).catch(()=>{});
-      setTimeout(()=>{
-        window.open('https://console.firebase.google.com/project/instantmission-8265e/authentication/users', '_blank');
-        showToast('이메일이 복사됐어요! 콘솔 검색창에 붙여넣고 계정을 삭제해주세요: ' + email);
-      }, 600);
+      const consoleUrl = 'https://console.firebase.google.com/project/instantmission-8265e/authentication/users';
+      if(consoleTab){
+        consoleTab.location.href = consoleUrl;
+      } else {
+        window.open(consoleUrl, '_blank');
+      }
+      showToast('이메일이 복사됐어요! 콘솔 검색창에 붙여넣고 계정을 삭제해주세요: ' + email);
     }
   }).catch(e=>{
+    if(consoleTab) consoleTab.close();
     showToast('삭제 실패: ' + e.message);
   });
 }
@@ -623,6 +630,8 @@ function rejectRequest(requestId, missionId){
 function completeRequest(requestId, userId){
   const amountInput = document.getElementById(`amount-${requestId}`);
   const amount = parseInt(amountInput.value) || 1000;
+
+  if(!confirm(`이 신청을 완료 처리할까요?\n\n지급 포인트: ${amount.toLocaleString()}원\n\n확인을 누르면 즉시 유저에게 포인트가 지급돼요.`)) return;
 
   db.runTransaction(async (tx)=>{
     const reqRef = db.collection('requests').doc(requestId);
